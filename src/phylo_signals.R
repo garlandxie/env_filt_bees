@@ -84,6 +84,10 @@ trait_clean <- trait_clean %>%
 # double-check
 glimpse(trait_clean)
 
+# save the tidy trait dataset
+write.csv(trait_clean, 
+          file = here("data/final", "trait_matrix.csv"))
+
 # tree scaling -----------------------------------------------------------------
 
 # imported tree is not ultrametric - requires tree scaling
@@ -308,6 +312,5 @@ emer_time_ER_star <- fitDiscrete(star_tree, emer_time, model = "ER")
 # p < 0.05: infer phylogenetic structure for the given focal trait
 LR.nest <-2*(emer_time_ER$opt$lnL - emer_time_ER_star$opt$lnL)
 pchisq(LR.itd, df = 1, lower.tail = F)
-
 
 
