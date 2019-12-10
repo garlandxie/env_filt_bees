@@ -305,4 +305,60 @@ c1_rlq_250 <-
         panel.background = element_blank(), 
         axis.line = element_line(colour = "black"),
   ) 
-  
+
+# RLQ plots: env vars ----------------------------------------------------------
+
+env_vars <- c("% Grass", "% Tree Canopy", "% Urban Area") 
+rownames(RLQ_250$l1) <- env_vars
+rownames(RLQ_500$l1) <- env_vars
+
+l1_rlq_250 <- 
+  ggplot() +
+    geom_vline(xintercept = 0, lwd = 0.5, col = "grey") +  
+    geom_hline(yintercept = 0, lwd = 0.5,col = "grey") +
+    geom_label_repel(aes(x = RS1, 
+                         y = RS2, 
+                         label = rownames(RLQ_250$l1)), 
+                     point.padding = 0.5,
+                     data = RLQ_250$l1) +
+    geom_segment(aes(x = 0, 
+                     y = 0, 
+                     xend = RS1, yend = RS2),
+                 arrow = arrow(length = unit(0.01, "npc")),
+                 colour = "red",
+                 size = 1,
+                 alpha = 0.25, 
+                 data = RLQ_250$l1) +  
+  xlab("Axis 1") +
+  ylab("Axis 2") +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black")) 
+
+l1_rlq_500 <- 
+  ggplot() +
+  geom_vline(xintercept = 0, lwd = 0.5, col = "grey") +  
+  geom_hline(yintercept = 0, lwd = 0.5,col = "grey") +
+  geom_label_repel(aes(x = RS1, 
+                       y = RS2, 
+                       label = rownames(RLQ_500$l1)), 
+                   point.padding = 0.5,
+                   data = RLQ_500$l1) +
+  geom_segment(aes(x = 0, 
+                   y = 0, 
+                   xend = RS1, yend = RS2),
+               arrow = arrow(length = unit(0.01, "npc")),
+               colour = "red",
+               size = 1,
+               alpha = 0.25, 
+               data = RLQ_500$l1) +  
+  xlab("Axis 1") +
+  ylab("Axis 2") +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black")) 
+
+
+
