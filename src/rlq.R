@@ -360,5 +360,47 @@ l1_rlq_500 <-
         panel.background = element_blank(), 
         axis.line = element_line(colour = "black")) 
 
+# RLQ plot: eigenvalues --------------------------------------------------------
+
+eigs_250 <- data.frame(
+  Axes = paste("Axis", 1:3, sep = " "),
+  Eigenvalues =  RLQ_250$eig,
+  Projected.Inertia = round(RLQ_250$eig/sum(RLQ_250$eig)*100, digits = 2)
+  )
+
+eigs_500 <- data.frame(
+  Axes = paste("Axis", 1:3, sep = " "),
+  Eigenvalues =  RLQ_500$eig,
+  Projected.Inertia = round(RLQ_500$eig/sum(RLQ_500$eig)*100, digits = 2)
+)
+
+plot_eigs_250 <- 
+  ggplot(data = eigs_250, aes(x = Axes, y = Projected.Inertia)) +
+  geom_bar(colour = "black", stat = "identity") + 
+  labs(x = "Axes", y = "Projected Inertia (%)") + 
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(), 
+    axis.line = element_line(colour = "black"),
+  ) 
+
+plot_eigs_500 <- 
+  ggplot(data = eigs_500, aes(x = Axes, y = Projected.Inertia)) +
+  geom_bar(colour = "black", stat = "identity") + 
+  labs(x = "Axes", y = "Projected Inertia (%)") + 
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(), 
+    axis.line = element_line(colour = "black"),
+  ) 
+
+
+
+  
+ 
+  
+ 
 
 
