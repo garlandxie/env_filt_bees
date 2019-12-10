@@ -10,6 +10,8 @@ library(here)
 library(janitor)
 library(stringr)
 library(readr)
+library(ggplot2)
+library(ggrepel)
 
 # Import files -----------------------------------------------------------------
 
@@ -181,4 +183,126 @@ RLQ_500 <- rlq(dudiR = dudiR_500,
 # cumulative projected inertia (%)
 summary(RLQ_500)
 
-# plots ------------------------------------------------------------------------
+# RLQ plots: species -----------------------------------------------------------
+
+lQ_rlq_250 <- 
+ 
+  ggplot() +
+  geom_vline(xintercept = 0, 
+             lwd = 0.5, 
+             col = "grey") + 
+  geom_hline(yintercept = 0, 
+             lwd = 0.5, 
+             col = "grey") +
+  geom_point(aes(x = AxcQ1, y = AxcQ2), 
+             size = 2, 
+             color = "grey", 
+             alpha = 1, 
+             data = RLQ_250$lQ) +
+  geom_label_repel(aes(x = AxcQ1, 
+                       y = AxcQ2, 
+                       fill = (str_extract(rownames(RLQ_250$lQ), "^[^_]+")),  
+                       label = rownames(RLQ_250$lQ)),
+                   segment.alpha = 0.5,
+                   point.padding = 0.5,
+                   size = 3,
+                   data = RLQ_250$lQ
+                   ) + 
+  scale_fill_discrete(name = "Genus") + 
+  xlab("Axis 1") + 
+  ylab("Axis 2") +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(), 
+    axis.line = element_line(colour = "black")
+  ) 
+
+lQ_rlq_500 <- 
+  
+  ggplot() +
+  geom_vline(xintercept = 0, 
+             lwd = 0.5, 
+             col = "grey") + 
+  geom_hline(yintercept = 0, 
+             lwd = 0.5, 
+             col = "grey") +
+  geom_point(aes(x = AxcQ1, y = AxcQ2), 
+             size = 2, 
+             color = "grey", 
+             alpha = 1, 
+             data = RLQ_500$lQ) +
+  geom_label_repel(aes(x = AxcQ1, 
+                       y = AxcQ2, 
+                       fill = (str_extract(rownames(RLQ_500$lQ), "^[^_]+")),  
+                       label = rownames(RLQ_500$lQ)),
+                   segment.alpha = 0.5,
+                   point.padding = 0.5,
+                   size = 3,
+                   data = RLQ_500$lQ
+  ) + 
+  scale_fill_discrete(name = "Genus") + 
+  xlab("Axis 1") + 
+  ylab("Axis 2") +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(), 
+    axis.line = element_line(colour = "black")
+  ) 
+  
+# RLQ plots: traits ------------------------------------------------------------
+
+c1_rlq_500 <-
+  
+ggplot() + 
+  geom_vline(xintercept = 0, 
+             lwd = 0.5, 
+             col = "grey") +  
+  geom_hline(yintercept = 0, 
+             lwd = 0.5,
+             col = "grey") +
+  geom_label_repel(aes(x = CS1, y = CS2, 
+                       label = rownames(RLQ_500$c1)), 
+                   point.padding = 0.5,
+                   data = RLQ_500$c1) + 
+  geom_segment(aes(x = 0, y = 0, xend = CS1, yend = CS2),
+               arrow = arrow(length = unit(0.01, "npc")),
+               colour = "blue",
+               alpha = 0.25, 
+               data = RLQ_500$c1) +  
+  xlab("Axis 1") +
+  ylab("Axis 2") +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+  ) 
+
+
+c1_rlq_500 <- 
+  
+  ggplot() + 
+  geom_vline(xintercept = 0, 
+             lwd = 0.5, 
+             col = "grey") +  
+  geom_hline(yintercept = 0, 
+             lwd = 0.5,
+             col = "grey") +
+  geom_label_repel(aes(x = CS1, y = CS2, 
+                       label = rownames(RLQ_250$c1)), 
+                   point.padding = 0.5,
+                   data = RLQ_250$c1) + 
+  geom_segment(aes(x = 0, y = 0, xend = CS1, yend = CS2),
+               arrow = arrow(length = unit(0.01, "npc")),
+               colour = "blue",
+               alpha = 0.25, 
+               data = RLQ_250$c1) +  
+  xlab("Axis 1") +
+  ylab("Axis 2") +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+  ) 
+  
