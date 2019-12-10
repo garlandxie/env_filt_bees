@@ -243,22 +243,19 @@ phylo.d(data = as.data.frame(trait_clean),
 nest_mat <- trait_clean$num_nest_mat %>% as.character()
 names(nest_mat) <- trait_clean$spp
 tree_multi2di <- multi2di(tree_rescale_ulm)
-tree_no_poly <- drop.tip(tree_rescale_ulm, 
-                         tip = c("Hylaeus_mesillae",
-                                 "Megachile_inermis"))
 
 # trait evolution models 
-nest_mat_ER <- fitDiscrete(tree_no_poly, nest_mat, 
+nest_mat_ER <- fitDiscrete(tree_multi2di, nest_mat, 
                            transform = "lambda",
                            model = "ER",
                            control = list(niter = 1000))
 
-nest_mat_SYM <- fitDiscrete(tree_no_poly, nest_mat, 
+nest_mat_SYM <- fitDiscrete(tree_multi2di, nest_mat, 
                            transform = "lambda",
                            model = "SYM",
                            control = list(niter = 1000))
 
-nest_mat_ARD <- fitDiscrete(tree_no_poly, nest_mat, 
+nest_mat_ARD <- fitDiscrete(tree_multi2di, nest_mat, 
                             transform = "lambda",
                             model = "ARD",
                             control = list(niter = 1000))
@@ -270,7 +267,7 @@ nest_mat_SYM$opt$aicc
 nest_mat_ARD$opt$aicc
 
 # star phylogenies
-star_tree <- rescale(tree_no_poly, "lambda", 0)
+star_tree <- rescale(tree_multi2di, "lambda", 0)
 star_nest_ER <- fitDiscrete(star_tree, nest_mat, 
                             model = "ER",
                             control = list(niter = 1000))
@@ -301,7 +298,7 @@ emer_time_SYM <- fitDiscrete(tree_multi2di, emer_time,
                              model = "SYM",
                              control = list(niter = 1000))
 
-emer_time_ARD <- fitDiscrete(tree_no_poly, emer_time, 
+emer_time_ARD <- fitDiscrete(tree_multi2di, emer_time, 
                              transform = "lambda",
                              model = "ARD",
                              control = list(niter = 1000))
