@@ -243,22 +243,25 @@ phylo.d(data = as.data.frame(trait_clean),
 nest_mat <- trait_clean$num_nest_mat %>% as.character()
 names(nest_mat) <- trait_clean$spp
 tree_multi2di <- multi2di(tree_rescale_ulm)
+tree_no_poly <- drop.tip(tree_rescale_ulm, 
+                         tip = c("Hylaeus_mesillae",
+                                 "Megachile_inermis"))
 
 # trait evolution models 
-nest_mat_ER <- fitDiscrete(tree_multi2di, nest_mat, 
+nest_mat_ER <- fitDiscrete(tree_no_poly, nest_mat, 
                            transform = "lambda",
                            model = "ER",
-                           control = list(niter = 100))
+                           control = list(niter = 1000))
 
-nest_mat_SYM <- fitDiscrete(tree_multi2di, nest_mat, 
+nest_mat_SYM <- fitDiscrete(tree_no_poly, nest_mat, 
                            transform = "lambda",
                            model = "SYM",
-                           control = list(niter = 100))
+                           control = list(niter = 1000))
 
-nest_mat_ARD <- fitDiscrete(tree_multi2di, nest_mat, 
+nest_mat_ARD <- fitDiscrete(tree_no_poly, nest_mat, 
                             transform = "lambda",
                             model = "ARD",
-                            control = list(niter = 100))
+                            control = list(niter = 1000))
 
 
 # model comparison through AICc
@@ -267,18 +270,23 @@ nest_mat_SYM$opt$aicc
 nest_mat_ARD$opt$aicc
 
 # star phylogenies
-star_tree <- rescale(tree_multi2di, "lambda", 0)
-star_nest_ER <- fitDiscrete(star_tree, nest_mat, model = "ER")
+star_tree <- rescale(tree_no_poly, "lambda", 0)
+star_nest_ER <- fitDiscrete(star_tree, nest_mat, 
+                            model = "ER",
+                            control = list(niter = 1000))
 
 # likelihood ratio test
 # p < 0.05: infer phylogenetic structure for the given focal trait
 LR.nest <-2*(nest_mat_ER$opt$lnL - star_nest_ER$opt$lnL)
-pchisq(LR.itd, df = 1, lower.tail = F)
+pchisq(LR.nest, df = 1, lower.tail = F)
 
 # phylogenetic signal: emergence time ------------------------------------------
 
 # prep
-emer_time <- trait_clean$emer_time %>% as.character()
+emer_time <- trait_clean$emer_time %>% 
+  factor(levels = c("1", "2", "3", "4"), 
+         ordered = TRUE)
+
 names(emer_time) <- trait_clean$spp
 tree_multi2di <- multi2di(tree_rescale_ulm)
 
@@ -286,17 +294,17 @@ tree_multi2di <- multi2di(tree_rescale_ulm)
 emer_time_ER <- fitDiscrete(tree_multi2di, emer_time, 
                            transform = "lambda",
                            model = "ER",
-                           control = list(niter = 100))
+                           control = list(niter = 1000))
 
 emer_time_SYM <- fitDiscrete(tree_multi2di, emer_time, 
                              transform = "lambda",
                              model = "SYM",
-                             control = list(niter = 100))
+                             control = list(niter = 1000))
 
-emer_time_ARD <- fitDiscrete(tree_multi2di, emer_time, 
+emer_time_ARD <- fitDiscrete(tree_no_poly, emer_time, 
                              transform = "lambda",
                              model = "ARD",
-                             control = list(niter = 100))
+                             control = list(niter = 1000))
 
 
 # model comparison through AICc
@@ -306,11 +314,13 @@ emer_time_ER$opt$aicc # has the lowest AiCc?
 
 # star phylogenies
 star_tree <- rescale(tree_multi2di, "lambda", 0)
-emer_time_ER_star <- fitDiscrete(star_tree, emer_time, model = "ER")
+emer_time_ER_star <- fitDiscrete(star_tree, emer_time, 
+                                 model = "ER", 
+                                 control = list(niter = 1000))
 
 # likelihood ratio test
 # p < 0.05: infer phylogenetic structure for the given focal trait
-LR.nest <-2*(emer_time_ER$opt$lnL - emer_time_ER_star$opt$lnL)
-pchisq(LR.itd, df = 1, lower.tail = F)
+LR_emer <-2*(emer_time_ER$opt$lnL - emer_time_ER_star$opt$lnL)
+pchisq(LR_emer, df = 1, lower.tail = F)
 
 
