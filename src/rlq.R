@@ -3,15 +3,13 @@
 # Code developed by Garland Xie
 
 # Load libraries ---------------------------------------------------------------
-library(dplyr)
 library(ade4)
 library(readxl)
 library(here)
 library(janitor)
-library(stringr)
-library(readr)
-library(ggplot2)
 library(ggrepel)
+library(tidyverse)
+library(gghighlight)
 
 # Import files -----------------------------------------------------------------
 
@@ -80,7 +78,10 @@ trait_clean <- trait %>%
          num_nest_mat   = factor(num_nest_mat),
          diet           = factor(diet),
          volt           = factor(volt)
-         )
+         ) %>%
+  rename(LH = leaf_hair, 
+         LC = leaf_cut, 
+         LP = leaf_pulp)
 
 # double-check
 str(trait_clean)
@@ -109,7 +110,7 @@ met_500_clean <- met_500 %>%
 dudiL_250 <- comm_tidy %>%
   inner_join(met_250_clean, by = "ID") %>%
   select(colnames(comm_tidy)) %>%
-  tibble::column_to_rownames(var = "ID") %>%
+  column_to_rownames(var = "ID") %>%
   dudi.coa(scannf = F)
 
 # principal component analysis
@@ -117,7 +118,7 @@ dudiL_250 <- comm_tidy %>%
 # weighted by site weights from previous correspondance analysis
 
 dudiR_250 <- met_250_clean %>%
-  tibble::column_to_rownames(var = "ID") %>%
+  column_to_rownames(var = "ID") %>%
   select("250_urban" = "total.area_250_urban",
          "250_grass" = "total.area_250_grass",
          "250_tree"  = "total.area_250_tree_canopy") %>%
@@ -129,7 +130,7 @@ dudiR_250 <- met_250_clean %>%
 
 dudiQ_250 <- trait_clean %>%
   select(-spp) %>%
-  tibble::column_to_rownames(var = "ID") %>%
+  column_to_rownames(var = "ID") %>%
   dudi.hillsmith(row.w = dudiL_250$cw, 
                  scannf = F)
 
@@ -396,11 +397,101 @@ plot_eigs_500 <-
     axis.line = element_line(colour = "black"),
   ) 
 
+# misc plots -------------------------------------------------------------------
 
-
+R_250_load <- RLQ_250$l1 %>%
+  rownames_to_column(var = "class") %>%
+  select(class, RS1) %>%
+  mutate(class = factor(class) %>% fct_reorder(RS1)) %>%
+  ggplot(aes(x = class, y = RS1, fill = class)) + 
+  geom_col(show.legend = FALSE, alpha = 0.8) +
+  labs(x = NULL,
+       y = "Relative importance in principle component 1") + 
+  coord_flip() 
   
- 
-  
- 
+R_500_load <- RLQ_500$l1 %>%
+  rownames_to_column(var = "class") %>%
+  select(class, RS1) %>%
+  mutate(class = factor(class) %>% fct_reorder(RS1)) %>%
+  ggplot(aes(x = class, y = RS1, fill = class)) + 
+  geom_col(show.legend = FALSE, alpha = 0.8) +
+  labs(x = NULL,
+       y = "Relative importance in principle component (weighted by species abundance") + 
+  coord_flip() 
 
+traits_N <- c("stone.N","none.N","resin.N", "mud.N", 
+              "LH.N", "LP.N", "LC.N")
+ 
+RLQ_250_load <- RLQ_250$c1 %>%
+  rownames_to_column(var = "traits")%>%
+  select(traits, CS1) %>%
+  filter(!traits %in% traits_N) %>%
+  mutate(traits = as.character(traits), 
+         traits = case_when( 
+           traits == "emer_.1" ~ "Emergence Time (Days 1-5)",
+           traits == "emer_.2" ~ "Emergence Time (Days 6-14)",
+           traits == "emer_.3" ~ "Emergence Time (Days 15-25)",
+           traits == "emer_.4" ~ "Emergence Time (Days 26+)",
+           traits == "num_n.0" ~ "Number of Nesting Material Types (0)",
+           traits == "num_n.1" ~ "Number of Nesting Material Types (1)",
+           traits == "num_n.2" ~ "Number of Nesting Material Types (2)",
+           traits == "num_n.3" ~ "Number of Nesting Material Types (3)",
+           traits == "diet.Poly" ~ "Diet Breadth (Polylectic)",
+           traits == "diet.Oligo" ~ "Diet Breadth (Oligolectic)",
+           traits == "volt.1" ~ "Univoltinism",
+           traits == "volt.2" ~ "Multivolinism",
+           traits == "stone.Y" ~ "Nesting Material (Stone)",
+           traits == "none.Y" ~ "Nesting Material (None)",
+           traits == "mud.Y" ~ "Nestign Material (Mud)",
+           traits == "LH.Y" ~ "Nesting Material (Leaf Hair)",
+           traits == "LC.Y" ~ "Nesting Material (Leaf Cut)",
+           traits == "LP.Y" ~ "Nesting Material (Leaf Pulp)",
+           traits == "resin.Y" ~ "Nesting Material (Resin)",
+           traits == "nativ.Y"  ~ "Native Status",
+           traits == "nativ.N" ~ "Exotic Status",
+           traits == "itd" ~ "Intertegular Distance",
+           TRUE ~ traits),
+           traits = reorder(traits, CS1)) %>%
+  ggplot(aes(x = traits, y = CS1, fill = traits)) + 
+  geom_col(show.legend = FALSE, alpha = 0.8) +
+  labs(x = NULL,
+       y = "Relative importance in RLQ component 1") + 
+  coord_flip() 
+
+RLQ_500_load <- RLQ_500$c1 %>%
+  rownames_to_column(var = "class") %>%
+  select(class, CS1) %>%
+  mutate(class = factor(class) %>% fct_reorder(CS1),) %>%
+  ggplot(aes(x = class, y = CS1, fill = class)) + 
+  geom_col(show.legend = FALSE, alpha = 0.8) +
+  labs(x = NULL,
+       y = "Relative importance in RLQ component") + 
+  coord_flip() 
+ 
+L_250_load <- RLQ_250$mQ %>%
+  rownames_to_column(var = "species") %>%
+  select(species, NorS1) %>%
+  mutate(species = reorder(species, NorS1),
+         genus = str_split(species, pattern = "_") %>%
+                sapply("[", 1)) %>%
+  ggplot(aes(x = species, y = NorS1, fill = genus)) + 
+  geom_col(show.legend = TRUE, alpha = 0.8) +
+  labs(x = NULL,
+       y = "Relative importance in CA component 1") + 
+  coord_flip()
+
+L_500_load <- RLQ_500$mQ %>%
+  rownames_to_column(var = "species") %>%
+  select(species, NorS1) %>%
+  mutate(species = factor(species) %>% fct_reorder(NorS1),
+         genus = str_split(species, pattern = "_") %>%
+           sapply("[", 1)) %>%
+  ggplot(aes(x = species, y = NorS1, fill = genus)) + 
+  geom_col(show.legend = TRUE, alpha = 0.8) +
+  labs(x = NULL,
+       y = "Relative importance in CA component") + 
+  coord_flip() + 
+  theme(axis.ticks.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.background = element_rect(color = "white"))
 
