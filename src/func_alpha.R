@@ -155,5 +155,5 @@ fviz_pca_var(pca, repel = TRUE)
 colnames(ses_MFD_tx) <- str_replace(colnames(ses_MFD_tx), "mpd", "mfd")
 
 # write to disk
-write.csv(ses_MFD_tx, here("data/working", "d99_ses_mfd.csv"))
+write.csv(ses_MFD_tx, here("data/working", "ses_mfd.csv"))
 
