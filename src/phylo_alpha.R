@@ -104,7 +104,7 @@ mpd_sr <- function(df, mod_title = NULL) {
   
 plot_tx <- mpd_sr(ses_mpd_tx, mod_title = "taxa labels")
 plot_R  <- mpd_sr(ses_mpd_R, mod_title = "richness")
-plot_freq <- mpd_sr(ses_mpd_R, mod_title = "frequency")
+plot_freq <- mpd_sr(ses_mpd_freq, mod_title = "frequency")
 plot_sp <- mpd_sr(ses_mpd_sp, mod_title = "speciess pool")
 plot_pp <- mpd_sr(ses_mpd_pp, mod_title = "phylogeny pool")
 plot_is <- mpd_sr(ses_mpd_is, mod_title = "ind swap")
@@ -140,5 +140,5 @@ fviz_pca_var(pca, repel = TRUE)
 # Save the file ----------------------------------------------------------------
 
 write.csv(ses_mpd_tx,
-          here("data/working", "d99_ses_mpd.csv"))
+          here("data/working", "ses_mpd.csv"))
 
