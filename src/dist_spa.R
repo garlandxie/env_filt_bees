@@ -54,7 +54,10 @@ site_sp <- site
 
 # coerce site database to SpatialPointsDataFrame obj
 coordinates(site_sp) = ~mtm3deg_nor + mtm3deg_eas
-proj4string(site_sp) <- CRS("+proj=tmerc +lat_0=0 +lon_0=-79.5 +k=0.9999 +x_0=304800 +y_0=0 +datum=NAD27 +units=m +no_defs +ellps=clrk66 +nadgrids=@conus,@alaska,@ntv2_0.gsb,@ntv1_can.dat")
+proj4string(site_sp) <- CRS("+proj=tmerc +lat_0=0 +lon_0=-79.5 +k=0.9999 \n
+                            +x_0=304800 +y_0=0 +datum=NAD27 \n
+                            +units=m +no_defs +ellps=clrk66 \n
+                            +nadgrids=@conus,@alaska,@ntv2_0.gsb,@ntv1_can.dat")
 
 # calculate spatial distance matrix --------------------------------------------
 
