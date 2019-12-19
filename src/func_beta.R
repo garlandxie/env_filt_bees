@@ -53,7 +53,6 @@ comm_rel <- decostand(comm, method = "pa") %>%
   # remove kleptoparasites
   select(site, rownames(trait_tidy)) %>%
   
-  # remove communities with zero total abundance
   # functional beta.pair requires 3 or more species
   filter(rowSums(.[-1]) >= 3)  %>%
   
