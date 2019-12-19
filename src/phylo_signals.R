@@ -84,6 +84,10 @@ write.tree(tree_rescale, here("data/final", "tree_rescale_ulm.new"))
 # read in tree as a phylo object class
 tree_rescale_ulm <- read.tree(here("data/final", "tree_rescale_ulm.new"))
 
+# remove node labels on phylogenetic tree
+tree_nodes_null <- tree_rescale_ulm 
+tree_nodes_null$node.label <- NULL
+
 # phylogenetic signals: ITD ----------------------------------------------------
   
 # prep
@@ -103,14 +107,10 @@ pchisq(LR.itd, df = 1, lower.tail = F)
 
 # phylogenetic signals: native status ------------------------------------------
 
-# prep 
-tree_nodes_null <- tree_rescale_ulm 
-tree_nodes_null$node.label <- NULL
-
 # fit model using phylogenetic D statistic
 # statistical inference: 0 = BM model, 1 = no signal
 # result: follows a BM model
-phylo.d(data = as.data.frame(trait_clean), 
+phylo.d(data = as.data.frame(trait), 
         phy = tree_nodes_null, 
         names.col = spp, 
         binvar = native_y_n)
@@ -120,7 +120,7 @@ phylo.d(data = as.data.frame(trait_clean),
 # fit model using phylogenetic D statistic
 # statistical inference: 0 = BM model, 1 = no signal
 # result: follows a BM model
-phylo.d(data = as.data.frame(trait_clean), 
+phylo.d(data = as.data.frame(trait),
         phy = tree_nodes_null, 
         names.col = spp, 
         binvar = leaf_hair)
@@ -130,141 +130,63 @@ phylo.d(data = as.data.frame(trait_clean),
 # fit model using phylogenetic D statistic
 # statistical inference: 0 = BM model, 1 = no signal
 # result: follows a BM model
-phylo.d(data = as.data.frame(trait_clean), 
+phylo.d(data = as.data.frame(trait), 
         phy = tree_nodes_null, 
         names.col = spp, 
         binvar = leaf_cut)
 
 # phylogenetic signal: leaf pulp -----------------------------------------------
 
-phylo.d(data = as.data.frame(trait_clean), 
+phylo.d(data = as.data.frame(trait), 
         phy = tree_nodes_null, 
         names.col = spp, 
         binvar = leaf_pulp)
 
 # phylogenetic signal: resin ---------------------------------------------------
 
-phylo.d(data = as.data.frame(trait_clean), 
+phylo.d(data = as.data.frame(trait), 
         phy = tree_nodes_null, 
         names.col = spp, 
         binvar = resin)
 
 # phylogenetic signal: mud -----------------------------------------------------
 
-phylo.d(data = as.data.frame(trait_clean), 
+phylo.d(data = as.data.frame(trait), 
         phy = tree_nodes_null, 
         names.col = spp, 
         binvar = mud)
 
 # phylogenetic signal: stone ---------------------------------------------------
 
-phylo.d(data = as.data.frame(trait_clean), 
+phylo.d(data = as.data.frame(trait), 
         phy = tree_nodes_null, 
         names.col = spp, 
         binvar = stone)
 
 # phylogenetic signal: none ----------------------------------------------------
 
-phylo.d(data = as.data.frame(trait_clean), 
+phylo.d(data = as.data.frame(trait), 
         phy = tree_nodes_null, 
         names.col = spp, 
         binvar = none)
 
 # phylogenetic signal: diet breadth --------------------------------------------
 
-phylo.d(data = as.data.frame(trait_clean), 
+phylo.d(data = as.data.frame(trait), 
         phy = tree_nodes_null, 
         names.col = spp, 
         binvar = diet)
 
 # phylogenetic signal: voltinism -----------------------------------------------
 
-phylo.d(data = as.data.frame(trait_clean), 
+phylo.d(data = as.data.frame(trait), 
         phy = tree_nodes_null, 
         names.col = spp, 
         binvar = volt)
 
-# phylogenetic signals: num of nestimg material types --------------------------
+# phylogenetic signal: emergence time -------------------------------------------
 
-# prep
-nest_mat <- trait_clean$num_nest_mat %>% as.character()
-names(nest_mat) <- trait_clean$spp
-tree_multi2di <- multi2di(tree_rescale_ulm)
-
-# trait evolution models 
-nest_mat_ER <- fitDiscrete(tree_multi2di, nest_mat, 
-                           transform = "lambda",
-                           model = "ER",
-                           control = list(niter = 1000))
-
-nest_mat_SYM <- fitDiscrete(tree_multi2di, nest_mat, 
-                           transform = "lambda",
-                           model = "SYM",
-                           control = list(niter = 1000))
-
-nest_mat_ARD <- fitDiscrete(tree_multi2di, nest_mat, 
-                            transform = "lambda",
-                            model = "ARD",
-                            control = list(niter = 1000))
-
-
-# model comparison through AICc
-nest_mat_ER$opt$aicc
-nest_mat_SYM$opt$aicc
-nest_mat_ARD$opt$aicc
-
-# star phylogenies
-star_tree <- rescale(tree_multi2di, "lambda", 0)
-star_nest_ER <- fitDiscrete(star_tree, nest_mat, 
-                            model = "ER",
-                            control = list(niter = 1000))
-
-# likelihood ratio test
-# p < 0.05: infer phylogenetic structure for the given focal trait
-LR.nest <-2*(nest_mat_ER$opt$lnL - star_nest_ER$opt$lnL)
-pchisq(LR.nest, df = 1, lower.tail = F)
-
-# phylogenetic signal: emergence time ------------------------------------------
-
-# prep
-emer_time <- trait_clean$emer_time %>% 
-  factor(levels = c("1", "2", "3", "4"), 
-         ordered = TRUE)
-
-names(emer_time) <- trait_clean$spp
-tree_multi2di <- multi2di(tree_rescale_ulm)
-
-# trait evolution models 
-emer_time_ER <- fitDiscrete(tree_multi2di, emer_time, 
-                           transform = "lambda",
-                           model = "ER",
-                           control = list(niter = 1000))
-
-emer_time_SYM <- fitDiscrete(tree_multi2di, emer_time, 
-                             transform = "lambda",
-                             model = "SYM",
-                             control = list(niter = 1000))
-
-emer_time_ARD <- fitDiscrete(tree_multi2di, emer_time, 
-                             transform = "lambda",
-                             model = "ARD",
-                             control = list(niter = 1000))
-
-
-# model comparison through AICc
-emer_time_ARD$opt$aicc 
-emer_time_SYM$opt$aicc 
-emer_time_ER$opt$aicc # has the lowest AiCc?
-
-# star phylogenies
-star_tree <- rescale(tree_multi2di, "lambda", 0)
-emer_time_ER_star <- fitDiscrete(star_tree, emer_time, 
-                                 model = "ER", 
-                                 control = list(niter = 1000))
-
-# likelihood ratio test
-# p < 0.05: infer phylogenetic structure for the given focal trait
-LR_emer <-2*(emer_time_ER$opt$lnL - emer_time_ER_star$opt$lnL)
-pchisq(LR_emer, df = 1, lower.tail = F)
-
-
+phylo.d(data = as.data.frame(trait), 
+        phy = tree_nodes_null, 
+        names.col = spp, 
+        binvar = emer_time2)
