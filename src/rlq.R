@@ -4,12 +4,10 @@
 
 # Load libraries ---------------------------------------------------------------
 library(ade4)
-library(readxl)
 library(here)
 library(janitor)
 library(ggrepel)
 library(tidyverse)
-library(gghighlight)
 
 # Import files -----------------------------------------------------------------
 
@@ -23,7 +21,7 @@ met_250 <- read_csv(here("data/original", "land_use_metrics_250.csv"))
 met_500 <- read_csv(here("data/original", "land_use_metrics_500.csv"))
 
 # trait matrix of 31 species (excluded kleptoparasites)
-trait <- read_csv(here("data/final", "trait_matrix.csv"))
+trait <- read.csv(here("data/final", "trait_matrix.csv"))
 
 # Clean: comm matrix -------------------------------------------------
 
@@ -61,24 +59,13 @@ comm_tidy <- comm %>%
 # Clean: trait matrix ------------------------------------------------
 
 trait_clean <- trait %>%
-  select(-"X1") %>%
-  mutate(ID = taxon_change(spp) %>% 
-           str_replace("Ant_man", "Anth_man")) %>%
+  select(-"X") %>%
+  mutate(ID = spp %>% 
+           as.character() %>%
+           taxon_change() %>%
+           str_replace("Ant_man", "Anth_man"),
+         volt = factor(volt)) %>%
   
-  # change data types
-  mutate(native_y_n     = factor(native_y_n),
-         emer_time      = factor(emer_time),
-         leaf_hair      = factor(leaf_hair),
-         leaf_cut       = factor(leaf_cut),
-         leaf_pulp      = factor(leaf_pulp),
-         resin          = factor(resin),
-         stone          = factor(stone),
-         none           = factor(none),
-         mud            = factor(mud),
-         num_nest_mat   = factor(num_nest_mat),
-         diet           = factor(diet),
-         volt           = factor(volt)
-         ) %>%
   rename(LH = leaf_hair, 
          LC = leaf_cut, 
          LP = leaf_pulp)
@@ -131,8 +118,7 @@ dudiR_250 <- met_250_clean %>%
 dudiQ_250 <- trait_clean %>%
   select(-spp) %>%
   column_to_rownames(var = "ID") %>%
-  dudi.hillsmith(row.w = dudiL_250$cw, 
-                 scannf = F)
+  dudi.hillsmith(row.w = dudiL_250$cw, scannf = F)
 
 # RLQ: 250m spatial scale 
 # obtain first two RLQ axes in a non-iteractive manner 
@@ -427,22 +413,16 @@ RLQ_250_load <- RLQ_250$c1 %>%
   select(traits, CS1) %>%
   filter(!traits %in% traits_N) %>%
   mutate(traits = as.character(traits), 
-         traits = case_when( 
-           traits == "emer_.1" ~ "Emergence Time (Days 1-5)",
-           traits == "emer_.2" ~ "Emergence Time (Days 6-14)",
-           traits == "emer_.3" ~ "Emergence Time (Days 15-25)",
-           traits == "emer_.4" ~ "Emergence Time (Days 26+)",
-           traits == "num_n.0" ~ "Number of Nesting Material Types (0)",
-           traits == "num_n.1" ~ "Number of Nesting Material Types (1)",
-           traits == "num_n.2" ~ "Number of Nesting Material Types (2)",
-           traits == "num_n.3" ~ "Number of Nesting Material Types (3)",
+         traits = case_when(
+           traits == "emer_.Summer" ~ "Emergence Time (Summer)", 
+           traits == "emer_.Spring"~ "Emergence Time (Spring)", 
            traits == "diet.Poly" ~ "Diet Breadth (Polylectic)",
            traits == "diet.Oligo" ~ "Diet Breadth (Oligolectic)",
            traits == "volt.1" ~ "Univoltinism",
            traits == "volt.2" ~ "Multivolinism",
            traits == "stone.Y" ~ "Nesting Material (Stone)",
            traits == "none.Y" ~ "Nesting Material (None)",
-           traits == "mud.Y" ~ "Nestign Material (Mud)",
+           traits == "mud.Y" ~ "Nesting Material (Mud)",
            traits == "LH.Y" ~ "Nesting Material (Leaf Hair)",
            traits == "LC.Y" ~ "Nesting Material (Leaf Cut)",
            traits == "LP.Y" ~ "Nesting Material (Leaf Pulp)",
@@ -452,22 +432,44 @@ RLQ_250_load <- RLQ_250$c1 %>%
            traits == "itd" ~ "Intertegular Distance",
            TRUE ~ traits),
            traits = reorder(traits, CS1)) %>%
-  ggplot(aes(x = traits, y = CS1, fill = traits)) + 
+  ggplot(aes(x = traits, y = CS1)) + 
   geom_col(show.legend = FALSE, alpha = 0.8) +
   labs(x = NULL,
        y = "Relative importance in RLQ component 1") + 
-  coord_flip() 
+  coord_flip() + 
+  theme_minimal()
 
 RLQ_500_load <- RLQ_500$c1 %>%
-  rownames_to_column(var = "class") %>%
-  select(class, CS1) %>%
-  mutate(class = factor(class) %>% fct_reorder(CS1),) %>%
-  ggplot(aes(x = class, y = CS1, fill = class)) + 
+  rownames_to_column(var = "traits")%>%
+  select(traits, CS1) %>%
+  filter(!traits %in% traits_N) %>%
+  mutate(traits = as.character(traits), 
+         traits = case_when(
+           traits == "emer_.Summer" ~ "Emergence Time (Summer)", 
+           traits == "emer_.Spring"~ "Emergence Time (Spring)", 
+           traits == "diet.Poly" ~ "Diet Breadth (Polylectic)",
+           traits == "diet.Oligo" ~ "Diet Breadth (Oligolectic)",
+           traits == "volt.1" ~ "Univoltinism",
+           traits == "volt.2" ~ "Multivolinism",
+           traits == "stone.Y" ~ "Nesting Material (Stone)",
+           traits == "none.Y" ~ "Nesting Material (None)",
+           traits == "mud.Y" ~ "Nesting Material (Mud)",
+           traits == "LH.Y" ~ "Nesting Material (Leaf Hair)",
+           traits == "LC.Y" ~ "Nesting Material (Leaf Cut)",
+           traits == "LP.Y" ~ "Nesting Material (Leaf Pulp)",
+           traits == "resin.Y" ~ "Nesting Material (Resin)",
+           traits == "nativ.Y"  ~ "Native Status",
+           traits == "nativ.N" ~ "Exotic Status",
+           traits == "itd" ~ "Intertegular Distance",
+           TRUE ~ traits),
+         traits = reorder(traits, CS1)) %>%
+  ggplot(aes(x = traits, y = CS1)) + 
   geom_col(show.legend = FALSE, alpha = 0.8) +
   labs(x = NULL,
-       y = "Relative importance in RLQ component") + 
-  coord_flip() 
- 
+       y = "Relative importance in RLQ component 1") + 
+  coord_flip() + 
+  theme_minimal()
+
 L_250_load <- RLQ_250$mQ %>%
   rownames_to_column(var = "species") %>%
   select(species, NorS1) %>%
