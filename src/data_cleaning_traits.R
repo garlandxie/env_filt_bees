@@ -52,6 +52,8 @@ nest_mat <- c("leaf_hair",
 trait_tidy <- trait %>%
   clean_names() %>%
   mutate(
+    
+    # fix some spelling mistakes 
     species = str_replace(species, pattern = "centuncularis", replacement = "centucularis") %>%
               str_replace(pattern = "atriventris",  replacement = "atriventis") %>%
               str_replace(pattern = "carinata", replacement = "crucifera"), 
