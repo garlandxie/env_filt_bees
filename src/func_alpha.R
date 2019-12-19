@@ -26,6 +26,7 @@ tail(comm, n = 5)
 # trait matrix
 str(trait)
 head(trait, n = 5)
+tail(trait,  n = 5)
 
 # data cleaning ----------------------------------------------------------------
 
@@ -34,11 +35,9 @@ comm_rel <- decostand(comm, method = "total")
 
 # assign appropriate data types to each trait
 trait_tidy <- trait %>%
-  mutate(emer_time = factor(emer_time, ordered = TRUE),
-         num_nest_mat = factor(num_nest_mat, ordered = TRUE),
-         volt = factor(volt)) %>%
-  column_to_rownames(var = "spp") %>%
-  select(-X)
+  select(-"X") %>%
+  mutate(volt = factor(volt)) %>%
+  column_to_rownames(var = "spp") 
 
 # calculate gower distance matrix
 trait_dist <- gower.dist(trait_tidy)
