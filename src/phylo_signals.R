@@ -1,5 +1,4 @@
 # libraries --------------------------------------------------------------------
-library(readxl)
 library(here) 
 library(dplyr)
 library(janitor)
@@ -11,17 +10,17 @@ library(caper)
 # import -----------------------------------------------------------------------
 
 # trait matrix
-trait_df <- read_excel(here("data/original", "bee_trait_matrix.xlsx"))
+trait <- read.csv(here("data/final", "trait_matrix.csv"))
 
 # phylo tree (with soft polytomies)
-tree <- read.tree(file = here("data/original", "phylo_tree_ulm.new"))
+tree <- read.tree(here("data/original", "phylo_tree_ulm.new"))
 
 # check packaging --------------------------------------------------------------
 
 # raw trait matrix
-glimpse(trait_df)
-head(trait_df, n = 5)
-tail(trait_df, n = 5)
+glimpse(trait)
+head(trait, n = 5)
+tail(trait, n = 5)
 
 # basic information on the phylogeny
 plot(tree)
@@ -35,58 +34,6 @@ tree$node.label
 tree$edge.length
 cbind(tree$edge, tree$edge.length)
 tree$tip.label
-
-# clean data -------------------------------------------------------------------
-
-trait_clean <- trait_df %>%
-  
-  # create R-friendly column names
-  clean_names() %>%
-  
-  # fix some spelling mistakes
-  mutate(species = str_replace(species, pattern = "centuncularis", replacement = "centucularis") %>%
-                   str_replace(pattern = "atriventris",  replacement = "atriventis") %>%
-                   str_replace(pattern = "carinata", replacement = "crucifera")) %>%
-  
-  # create ID column to match with phylogenetic tree
-  mutate(spp = paste(genus, species, sep = "_")) %>%
-  
-  # select relevant trait data (see below)
-  dplyr::select(spp, 
-         native_y_n,
-         emer_time, 
-         leaf_hair,
-         leaf_cut, 
-         leaf_pulp,
-         resin, 
-         mud, 
-         stone, 
-         none, 
-         "num_nest_mat" = number_nesting_material_types,
-         diet, 
-         volt, 
-         itd) 
-
-# convert nesting material into a binary variable (0/1)
-nest_mat <- c("leaf_hair", 
-              "leaf_cut", 
-              "leaf_pulp", 
-              "resin", 
-              "mud", 
-              "stone", 
-              "none")  
-
-trait_clean <- trait_clean %>%
-  mutate_at(vars(nest_mat), ~replace(., is.na(.), "N") %>%
-                             str_replace("X", "Y") 
-            )
-
-# double-check
-glimpse(trait_clean)
-
-# save the tidy trait dataset
-write.csv(trait_clean, 
-          file = here("data/final", "trait_matrix.csv"))
 
 # tree scaling -----------------------------------------------------------------
 
