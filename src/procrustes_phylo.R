@@ -11,8 +11,8 @@
 library(vegan)
 library(picante)
 library(here)
-library(readr)
-library(dplyr)
+library(tidyverse)
+library(broom)
 
 # import -----------------------------------------------------------------------
 
@@ -88,33 +88,124 @@ all(phylo_tu >= 0)
 all(phylo_ne >= 0)
 all(phylo_tot >= 0)
 
-# environmental distance -------------------------------------------------------
-
-# subset diversity data to include sites using either the 250m or 500m buffer
-dpw_phylo_250 <- dpw_phylo[rownames(dpw_phylo) %in% rownames(l_met_250), rownames(dpw_phylo) %in% rownames(l_met_250)]
-dpw_phylo_500 <- dpw_phylo[rownames(dpw_phylo) %in% rownames(l_met_500), rownames(dpw_phylo) %in% rownames(l_met_500)]
-
 # clean data: environmental data -----------------------------------------------
 
 # subset metric data to include sites with diversity data
-l_met_250 <- 
-   
-   
-   l_met_250[rownames(l_met_250) %in% rownames(dpw_phylo_250),]
-l_met_500 <- l_met_500[rownames(l_met_500) %in% rownames(dpw_phylo_500),]
+met_250_clean <- met_250 %>%
+   select(ID = "X1",
+          grass_250_percent = "prop.landscape_250_grass",
+          tree_250_percent  = "prop.landscape_250_tree_canopy",
+          urban_250_percent = "prop.landscape_250_urban") %>%
+   filter(ID %in% rownames(phylo_tu)) %>%
+   column_to_rownames(var = "ID")
 
-# subset metric data to include columns used in analysis
-l_met_250 <- l_met_250[,c("prop.landscape_250_grass", "prop.landscape_250_tree_canopy", "prop.landscape_250_urban", "edge.density_250_total")]
-l_met_500 <- l_met_500[,c("prop.landscape_500_grass", "prop.landscape_500_tree_canopy", "prop.landscape_500_urban", "edge.density_500_total")]
+met_500_clean <- met_500 %>%
+   select(ID = "X1",
+          grass_500_percent = "prop.landscape_500_grass",
+          tree_500_percent  = "prop.landscape_500_tree_canopy",
+          urban_500_percent = "prop.landscape_500_urban") %>%
+   filter(ID %in% rownames(phylo_tu)) %>%
+   column_to_rownames(var = "ID")
+
+# double check: subsets have an environmental gradient?
+# high variation in % impervious cover
+# use histograms for quick data viz 
+
+met_250_clean %>%
+   ggplot(aes(x = urban_250_percent)) + 
+   geom_histogram(bins = 30) + 
+   labs(x = "% Impervious Cover", 
+        y = "", 
+        title = "250m buffer") + 
+   theme_minimal() 
+
+met_500_clean %>%
+   ggplot(aes(x = urban_500_percent)) + 
+   geom_histogram(bins = 30) + 
+   labs(x = "% Impervious Cover", 
+        y = "", 
+        title = "500m buffer") + 
+   theme_minimal() 
 
 # clean data: spatial distance  ------------------------------------------------
 
-# subset spatial distance matrix to include sites used in analysis
-dist_spa_250 <- dist_spa[rownames(dist_spa)%in%rownames(l_met_250),colnames(dist_spa)%in%rownames(l_met_250)]
-dist_spa_500 <- dist_spa[rownames(dist_spa)%in%rownames(l_met_500),colnames(dist_spa)%in%rownames(l_met_500)]
+# subset to match sites in environmental distance matrix
+dist_spa_250 <- dist_spa %>%
+   select(ID = X1, 
+          rownames(met_250_clean)) %>% 
+   filter(ID %in% rownames(met_250_clean)) %>%
+   column_to_rownames(var = "ID") %>%
+   as.matrix()
+ 
+dist_spa_500 <- dist_spa %>%
+   select(ID = X1, 
+          rownames(met_500_clean)) %>% 
+   filter(ID %in% rownames(met_500_clean)) %>%
+   column_to_rownames(var = "ID") %>%
+   as.matrix()
 
-#######################################################################################################
-### prepare spatial, environmental and diversity data for partial procrustes ###
+# double checks
+isSymmetric.matrix(dist_spa_250)
+isSymmetric.matrix(dist_spa_500)
+
+# PCA: environmental data (250m) -----------------------------------------------
+
+# perform PCA on environmental variables
+# standardize all variables
+pc_env_250 <- prcomp(met_250_clean, scale = TRUE) 
+
+# check for cumulative eigenvalues
+summary(pc_env_250)
+screeplot(pc_env_250)
+
+# plot score loadings
+env_pca_250_tidy <- bind_cols(
+   tag = colnames(met_250_clean), 
+   tidy(pc_env_250$rotation)) %>%
+   gather(PC, Contribution, PC1:PC3)
+
+env_pca_250_tidy %>%
+   filter(PC %in% c("PC1", "PC2", "PC3")) %>%
+   mutate(tag = reorder(tag, Contribution)) %>%
+   ggplot(aes(tag, Contribution)) +
+   geom_col(show.legend = FALSE, alpha = 0.8) + 
+   coord_flip() + 
+   labs(x = "",
+        y = "", 
+        title = "250m buffer") + 
+   facet_wrap(~PC , nrow = 3) 
+
+# get scores for all three axes
+scores_env_250 <- scores(pc_env_250, display = "sites", choice = 1:3)
+
+# PCA - environmental distance (500m) ------------------------------------------
+
+# perform PCA on environmental variables
+# standardize all variables
+pc_env_500 <- prcomp(met_500_clean, scale = TRUE) 
+
+# check for cumulative eigenvalues
+summary(pc_env_500)
+screeplot(pc_env_500)
+
+# plot score loadings
+env_pca_500_tidy <- bind_cols(
+   tag = colnames(met_500_clean), 
+   tidy(pc_env_500$rotation)) %>%
+   gather(PC, Contribution, PC1:PC3)
+
+env_pca_500_tidy %>%
+   filter(PC %in% c("PC1", "PC2", "PC3")) %>%
+   mutate(tag = reorder(tag, Contribution)) %>%
+   ggplot(aes(tag, Contribution)) +
+   geom_col(show.legend = FALSE, alpha = 0.8) + 
+   coord_flip() + 
+   labs(x = "",
+        y = "", 
+        title = "500m buffer") + 
+   facet_wrap(~PC , nrow = 3) 
+
+# PCoA: spatial distance (250m) ------------------------------------------------
 
 # PCA of spatial distance matrix and take scores of first 3 PCs for the 250m and the 500m buffer
 pc_env_250 <- scores( prcomp(dist(l_met_250),scale=T),display = "sites", choices=1:3)
