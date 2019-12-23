@@ -135,14 +135,14 @@ dist_spa_250 <- dist_spa %>%
           rownames(met_250_clean)) %>% 
    filter(ID %in% rownames(met_250_clean)) %>%
    column_to_rownames(var = "ID") %>%
-   as.matrix()
+   dist()
  
 dist_spa_500 <- dist_spa %>%
    select(ID = X1, 
           rownames(met_500_clean)) %>% 
    filter(ID %in% rownames(met_500_clean)) %>%
    column_to_rownames(var = "ID") %>%
-   as.matrix()
+   dist()
 
 # double checks
 isSymmetric.matrix(dist_spa_250)
@@ -176,7 +176,7 @@ env_pca_250_tidy %>%
    facet_wrap(~PC , nrow = 3) 
 
 # get scores for all three axes
-scores_env_250 <- scores(pc_env_250, display = "sites", choice = 1:3)
+scores_env_250 <- scores(pc_env_250, display = "sites", choice = 1:2)
 
 # PCA - environmental distance (500m) ------------------------------------------
 
@@ -205,62 +205,269 @@ env_pca_500_tidy %>%
         title = "500m buffer") + 
    facet_wrap(~PC , nrow = 3) 
 
+# get scores for all three axes
+scores_env_500 <- scores(pc_env_500, display = "sites", choice = 1:2)
+
 # PCoA: spatial distance (250m) ------------------------------------------------
 
-# PCA of spatial distance matrix and take scores of first 3 PCs for the 250m and the 500m buffer
-pc_env_250 <- scores( prcomp(dist(l_met_250),scale=T),display = "sites", choices=1:3)
-pc_env_500 <- scores( prcomp(dist(l_met_500),scale=T),display = "sites", choices=1:3)
+# conduct principal coordinate analysis
+pc_spa_250 <- cmdscale(d = dist_spa_250, eig = TRUE, k = 2)
 
-# PCA of spatial distance matrix and take scores of first 3 PCs for the 250m and the 500m buffer
-pc_spa_250 <- scores( prcomp(dist_spa_250,scale=T), choices=1:3)
-pc_spa_500 <- scores( prcomp(dist_spa_500,scale=T), choices=1:3)
+# how many negative eigenvalues
+length(which(pc_spa_250$eig < 0))
 
-# PCA of phylogenetic beta diversity and take scores of first 3 PCs for the 250m and the 500m buffer
-pc_dpw_250 <- scores( prcomp(dpw_phylo_250,scale=T), choices=1:3)
-pc_dpw_500 <- scores( prcomp(dpw_phylo_500,scale=T), choices=1:3)
+# how many PCoA axes?
+ncol(pc_spa_250$points)
 
-#######################################################################################################
-### partial procrustes analysis ###
+# plot 
+pc_spa_250$points %>%
+   as.data.frame() %>%
+   select(Axis_1 = V1, 
+          Axis_2 = V2) %>%
+   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   geom_point()
+
+# get scores for both axes
+scores_spa_250 <- pc_spa_250$points 
+
+# PCoA: spatial distance (500m) ------------------------------------------------
+
+# PCoA: spatial distance (500m) ------------------------------------------------
+
+# conduct principal coordinate analysis
+pc_spa_500 <- cmdscale(d = dist_spa_500, eig = TRUE, k = 3)
+
+# how many negative eigenvalues
+length(which(pc_spa_500$eig < 0))
+
+# determine value of negative eigenvalue
+# 4.981991e-08 (approx zero)
+pc_spa_500$eig[which(pc_spa_500$eig < 0)]
+
+# how many PCoA axes?
+ncol(pc_spa_500$points)
+
+# plot 
+pc_spa_500$points %>%
+   as.data.frame() %>%
+   select(Axis_1 = V1, 
+          Axis_2 = V2) %>%
+   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   geom_point() + 
+   theme_minimal()
+
+# get scores for both axes
+scores_spa_500 <- pc_spa_500$points 
+
+# PCoA: phylo nestedness (250m) --------------------------------------------
+
+# prep nestedness
+phylo_ne_250 <- phylo_ne %>%
+   as.data.frame() %>%
+   select(rownames(met_250_clean)) %>%
+   rownames_to_column(var = "ID") %>%
+   filter(ID %in% rownames(met_250_clean)) %>%
+   column_to_rownames(var = "ID") %>%
+   dist()
+
+# pcoa on nestedness
+pc_phy_ne_250 <- cmdscale(phylo_ne_250, eig = TRUE, k = 2)
+
+# how many negative eigenvalues?
+# just two and approx to zero
+length(which(pc_phy_ne_250$eig <= 0))
+
+pc_phy_ne_250$points %>%
+   as.data.frame() %>%
+   select(Axis_1 = V1, 
+          Axis_2 = V2) %>%
+   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   geom_point() + 
+   theme_minimal()
+
+# get scores of all axes
+scores_phy_ne_250 <- pc_phy_ne_250$points
+
+# PCoA: phylo nestedness (500m) --------------------------------------------
+
+# prep nestedness
+phylo_ne_500 <- phylo_ne %>%
+   as.data.frame() %>%
+   select(rownames(met_500_clean)) %>%
+   rownames_to_column(var = "ID") %>%
+   filter(ID %in% rownames(met_500_clean)) %>%
+   column_to_rownames(var = "ID") %>%
+   dist()
+
+# pcoa on nestedness
+pc_phy_ne_500 <- cmdscale(phylo_ne_500, eig = TRUE, k = 2)
+
+# how many negative eigenvalues?
+# just two and approx to zero
+length(which(pc_phy_ne_500$eig <= 0))
+
+pc_phy_ne_500$points %>%
+   as.data.frame() %>%
+   select(Axis_1 = V1, 
+          Axis_2 = V2) %>%
+   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   geom_point() + 
+   theme_minimal()
+
+# get scores of all axes
+scores_phy_ne_500 <- pc_phy_ne_500$points
+
+# PCoA: phylo turnover (250m) --------------------------------------------
+
+phylo_tu_250 <- phylo_tu %>%
+   as.data.frame() %>%
+   select(rownames(met_250_clean)) %>%
+   rownames_to_column(var = "ID") %>%
+   filter(ID %in% rownames(met_250_clean)) %>%
+   column_to_rownames(var = "ID") %>%
+   dist()
+
+# pcoa on nestedness
+pc_phy_tu_250 <- cmdscale(phylo_tu_250, eig = TRUE, k = 2)
+
+# how many negative eigenvalues?
+# just two and approx to zero
+length(which(pc_phy_tu_250$eig <= 0))
+
+pc_phy_tu_250$points %>%
+   as.data.frame() %>%
+   select(Axis_1 = V1, 
+          Axis_2 = V2) %>%
+   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   geom_point() + 
+   theme_minimal()
+
+# get scores of all axes
+scores_phy_tu_250 <- pc_phy_tu_250$points
+
+# PCoA: phylo turnover (500m) --------------------------------------------
+
+phylo_tu_500 <- phylo_tu %>%
+   as.data.frame() %>%
+   select(rownames(met_500_clean)) %>%
+   rownames_to_column(var = "ID") %>%
+   filter(ID %in% rownames(met_500_clean)) %>%
+   column_to_rownames(var = "ID") %>%
+   dist()
+
+# pcoa 
+pc_phy_tu_500 <- cmdscale(phylo_tu_500, eig = TRUE, k = 2)
+
+# how many negative eigenvalues?
+# just two and approx to zero
+length(which(pc_phy_tu_500$eig <= 0))
+
+pc_phy_tu_500$points %>%
+   as.data.frame() %>%
+   select(Axis_1 = V1, 
+          Axis_2 = V2) %>%
+   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   geom_point() + 
+   theme_minimal()
+
+# get scores of all axes
+scores_phy_tu_500 <- pc_phy_tu_500$points
+
+# PCoA: phylo total (250m) --------------------------------------------
+
+phylo_tot_250 <- phylo_tot %>%
+   as.data.frame() %>%
+   select(rownames(met_250_clean)) %>%
+   rownames_to_column(var = "ID") %>%
+   filter(ID %in% rownames(met_250_clean)) %>%
+   column_to_rownames(var = "ID") %>%
+   dist()
+
+# pcoa on nestedness
+pc_phy_tot_250 <- cmdscale(phylo_tot_250, eig = TRUE, k = 2)
+
+# how many negative eigenvalues?
+# just two and approx to zero
+length(which(pc_phy_tot_250$eig <= 0))
+
+pc_phy_tot_250$points %>%
+   as.data.frame() %>%
+   select(Axis_1 = V1, 
+          Axis_2 = V2) %>%
+   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   geom_point() + 
+   theme_minimal()
+
+# get scores of all axes
+scores_phy_tot_250 <- pc_phy_tot_250$points
+
+# PCoA: phylo total (500m) --------------------------------------------
+
+phylo_tot_500 <- phylo_tot %>%
+   as.data.frame() %>%
+   select(rownames(met_500_clean)) %>%
+   rownames_to_column(var = "ID") %>%
+   filter(ID %in% rownames(met_500_clean)) %>%
+   column_to_rownames(var = "ID") %>%
+   dist()
+
+# pcoa 
+pc_phy_tot_500 <- cmdscale(phylo_tot_500, eig = TRUE, k = 2)
+
+# how many negative eigenvalues?
+# just two and approx to zero
+length(which(pc_phy_tot_500$eig <= 0))
+
+pc_phy_tot_500$points %>%
+   as.data.frame() %>%
+   select(Axis_1 = V1, 
+          Axis_2 = V2) %>%
+   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   geom_point() + 
+   theme_minimal()
+
+# get scores of all axes
+scores_phy_tot_500 <- pc_phy_tot_500$points
+
+# Partial procrustes analysis: nestedness --------------------------------------
+
 # control for space (250m buffer)
-resid_spa_dpw_250 <- resid(lm(pc_dpw_250~pc_spa_250))
-resid_spa_env_250 <- resid(lm(pc_env_250~pc_spa_250))
+resid_spa_phy_ne_250<- resid(lm(scores_phy_ne_250 ~ scores_spa_250))
+resid_spa_env_250 <- resid(lm(scores_env_250 ~ scores_spa_250))
+
 # control for space (500m buffer)
-resid_spa_dpw_500 <- resid(lm(pc_dpw_500~pc_spa_500))
-resid_spa_env_500 <- resid(lm(pc_env_500~pc_spa_500))
+resid_spa_phy_ne_500 <- resid(lm(scores_phy_ne_500 ~ scores_spa_500))
+resid_spa_env_500 <- resid(lm(scores_env_500 ~ scores_spa_500))
 
-# run analysis for both the 250m and the 500m buffer
-parpro_250 <- protest(resid_spa_env_250,resid_spa_dpw_250)
-parpro_500 <- protest(resid_spa_env_500,resid_spa_dpw_500)
+# run analysis 
+parpro_ne_250 <- protest(X = resid_spa_env_250, Y = resid_spa_phy_ne_250)
+parpro_ne_500 <- protest(resid_spa_env_500, resid_spa_phy_ne_500)
 
+# Partial procustes analysis: turnover -----------------------------------------
 
+# control for space (250m buffer)
+resid_spa_phy_tu_250<- resid(lm(scores_phy_tu_250 ~ scores_spa_250))
+resid_spa_env_250 <- resid(lm(scores_env_250 ~ scores_spa_250))
 
-#######################################################################################################
-### summarize
-parpro_250
-parpro_500
+# control for space (500m buffer)
+resid_spa_phy_tu_500 <- resid(lm(scores_phy_tu_500 ~ scores_spa_500))
+resid_spa_env_500 <- resid(lm(scores_env_500 ~ scores_spa_500))
 
-#######################################################################################################
-### plot
-setwd(paste0(wd,"/d99/results/procrustes"))
+# run analysis 
+parpro_tu_250 <- protest(resid_spa_env_250, resid_spa_phy_tu_250)
+parpro_tu_500 <- protest(resid_spa_env_500, resid_spa_phy_tu_500)
 
-pdf('d99_procrustes_phylo.pdf',width=8,height=6)
-par(mfrow=c(1,2),mar=c(4,4,1,1))
-# 250
-plot(as.dist(dpw_phylo_250)~dist(l_met_250),
-     col="grey",pch=16,cex=0.7,
-     xlab="Environmental Distance (250m Buffer)", ylab=expression("Phylogenetic Beta Diversity"*" ("*italic(D)*scriptstyle(pw)*")"), cex.lab=0.8 )
-mtext("a", side=3, line=-2, adj=0.05, cex=1.5)
-r2 <- paste0(signif(parpro_250$t0, 2),",")
-p <- paste0(signif(parpro_250$signif, 2))
-mtext(bquote(R^2 == .(r2) ~ p ~ '>' ~ 0.05),
-      cex=0.8, side = 3, line = -2, adj = 0.90)
-# 500
-plot(as.dist(dpw_phylo_500)~dist(l_met_500),
-     col="grey",pch=16,cex=0.7,
-     xlab="Environmental Distance (500m Buffer)", ylab=expression("Phylogenetic Beta Diversity"*" ("*italic(D)*scriptstyle(pw)*")"), cex.lab=0.8 )
-mtext("b", side=3, line=-2, adj=0.05, cex=1.5)
-r2 <- paste0(signif(parpro_500$t0, 2),",")
-p <- paste0(signif(parpro_500$signif, 2))
-mtext(bquote(R^2 == .(r2) ~ p ~ '>' ~ 0.05),
-      cex=0.8, side = 3, line = -2, adj = 0.90)
-dev.off()
+# Partial procustes analysis: total --------------------------------------------
+
+# control for space (250m buffer)
+resid_spa_phy_tot_250<- resid(lm(scores_phy_tot_250 ~ scores_spa_250))
+resid_spa_env_250 <- resid(lm(scores_env_250 ~ scores_spa_250))
+
+# control for space (500m buffer)
+resid_spa_phy_tot_500 <- resid(lm(scores_phy_tot_500 ~ scores_spa_500))
+resid_spa_env_500 <- resid(lm(scores_env_500 ~ scores_spa_500))
+
+# run analysis 
+parpro_tot_250 <- protest(resid_spa_env_250, resid_spa_phy_tot_250)
+parpro_tot_500 <- protest(resid_spa_env_500, resid_spa_phy_tot_500)
+
