@@ -7,8 +7,7 @@ library(StatMatch)
 library(picante)
 library(here)
 library(tidyverse)
-library(cowplot)
-library(factoextra)
+library(gghighlight)
 
 # import -----------------------------------------------------------------------
 comm <- read.csv(here("data/original", "community_data_matrix.csv"),
@@ -36,7 +35,6 @@ comm_rel <- decostand(comm, method = "total")
 # assign appropriate data types to each trait
 trait_tidy <- trait %>%
   select(-"X") %>%
-  mutate(volt = factor(volt)) %>%
   column_to_rownames(var = "spp") 
 
 # calculate gower distance matrix
@@ -54,105 +52,57 @@ isSymmetric.matrix(trait_dist)
 
 # calculate ses.mfd ------------------------------------------------------------
 
-# some prep
-ses_MFD <- partial(ses.mpd, 
-                   samp = comm_tidy2, 
-                   dis  = trait_dist, 
-                   runs = 999, 
-                   abundance.weighted = TRUE)
-
 # lots of null models!
-ses_MFD_tx <- ses_MFD(null.model = "taxa.labels")
-ses_MFD_R  <- ses_MFD(null.model = "richness")
-ses_MFD_freq <- ses_MFD(null.model = "frequency")
-ses_MFD_sp   <- ses_MFD(null.model = "sample.pool")
-ses_MFD_pp   <- ses_MFD(null.model = "phylogeny.pool")
-ses_MFD_is   <- ses_MFD(null.model = "independentswap")
-ses_MFD_ts   <- ses_MFD(null.model = "trialswap")
+ses_MFD_tx <- ses.mpd(samp = comm_tidy2, 
+                      dis  = trait_dist, 
+                      runs = 999, 
+                      abundance.weighted = TRUE,
+                      null.model = "taxa.labels")
 
 # histograms -------------------------------------------------------------------
 
-hist(ses_MFD_freq$mpd.obs.p)
-hist(ses_MFD_is$mpd.obs.p)
-hist(ses_MFD_ts$mpd.obs.p)
-hist(ses_MFD_pp$mpd.obs.p)
 hist(ses_MFD_tx$mpd.obs.p)
-hist(ses_MFD_R$mpd.obs.p)
 
 # linear models ----------------------------------------------------------------
 
-# linear models
-lm_mfd <- partial(lm, formula = mpd.obs.z ~ ntaxa)
-
-summary(lm_mfd(data = ses_MFD_tx))
-summary(lm_mfd(data = ses_MFD_R))
-summary(lm_mfd(data = ses_MFD_freq))
-summary(lm_mfd(data = ses_MFD_sp))
-summary(lm_mfd(data = ses_MFD_pp))
-summary(lm_mfd(data = ses_MFD_is))
-summary(lm_mfd(data = ses_MFD_ts))
+summary(lm(data = ses_MFD_tx, formula = mpd.obs.z ~ ntaxa))
 
 # plots: ses.MFD versus richness -----------------------------------------------
 
-MFD_sr <- function(df, mod_title = NULL) {
-  
-  if(is.data.frame(df)) {
-    df %>%
-      filter(ntaxa != 0 & ntaxa != 1) %>%
-      ggplot(aes(x = ntaxa, y = mpd.obs.z)) + 
-      geom_point() + 
-      geom_smooth(method = "lm") + 
-      labs(x = "Species Richness",
-           y = "SES.MFD",
-           title = as.character(mod_title)) + 
-      theme_minimal()
-  } else {
-    print("df input is not a data-frame")
-  }
-}
+(plot_tx <- ses_MFD_tx %>%
+  filter(ntaxa != 0 & ntaxa != 1) %>%
+  ggplot(aes(x = ntaxa, y = mpd.obs.z)) + 
+  geom_point() + 
+  geom_smooth(method = "lm") + 
+  labs(x = "Species Richness",
+       y = "SES.MFD") + 
+  theme_minimal())
 
-# individual plots
-plot_tx <- MFD_sr(ses_MFD_tx, mod_title = "taxa labels")
-plot_R  <- MFD_sr(ses_MFD_R, mod_title = "richness")
-plot_freq <- MFD_sr(ses_MFD_R, mod_title = "frequency")
-plot_sp <- MFD_sr(ses_MFD_sp, mod_title = "speciess pool")
-plot_pp <- MFD_sr(ses_MFD_pp, mod_title = "phylogeny pool")
-plot_is <- MFD_sr(ses_MFD_is, mod_title = "ind swap")
-plot_ts <- MFD_sr(ses_MFD_ts, mod_title = "trial swap")
-
-# multi-panel figure
-(multi_pan <- plot_grid(plot_freq,
-                        plot_is,
-                        plot_ts,
-                        plot_R,
-                        plot_sp, 
-                        plot_pp,
-                        plot_tx,
-                        ncol = 4))
-
-# PCA --------------------------------------------------------------------------
-
-# assuming all vectors have the same order of sites
-pca_df <- data.frame(
-  tx = ses_MFD_tx$mpd.obs.z,
-  f  = ses_MFD_freq$mpd.obs.z, 
-  is = ses_MFD_is$mpd.obs.z, 
-  ts = ses_MFD_ts$mpd.obs.z, 
-  pp = ses_MFD_pp$mpd.obs.z, 
-  sp = ses_MFD_sp$mpd.obs.z, 
-  r  = ses_MFD_R$mpd.obs.z) %>%
-  filter(complete.cases(.))
-
-# looks like I should keep the simplest null model then
-# aka taxa labels
-pca <- prcomp(pca_df, center = TRUE, scale = TRUE)
-fviz_pca_var(pca, repel = TRUE)
-
-# save to disk -----------------------------------------------------------------
+# Visualize histograms of p-values ---------------------------------------------
 
 # rename columns to reflect mfd not mpd 
 colnames(ses_MFD_tx) <- str_replace(colnames(ses_MFD_tx), "mpd", "mfd")
 
+(p_hist <- ses_MFD_tx %>%
+   rename(ses_mfd = mfd.obs.z, 
+          p_value = mfd.obs.p) %>%
+   filter(ses_mfd < 0) %>%
+   ggplot(aes(x = p_value)) +
+   geom_histogram(bins = 30) + 
+   geom_vline(xintercept = 0.05, linetype = "dashed") + 
+   labs(y = "Frequency", 
+        x = "Randomized p-values of ses.MFD") + 
+   theme_minimal())
+
+# save to disk -----------------------------------------------------------------
+
 # write to disk
 write.csv(ses_MFD_tx, here("data/working", "ses_mfd.csv"))
+
+# Save histogram of p-values from ses.MFD
+ggsave(filename = here("output/figures", "fig1_crit1_ses_mfd.png"),
+       plot = p_hist,
+       units = "in",
+       height = 4,
+       width = 4)
 
