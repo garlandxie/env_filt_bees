@@ -91,7 +91,7 @@ all(phylo_tot >= 0)
 # clean data: environmental data -----------------------------------------------
 
 # subset metric data to include sites with diversity data
-met_250_clean <- met_250 %>%
+met_250_clean <- l_met_250 %>%
    select(ID = "X1",
           grass_250_percent = "prop.landscape_250_grass",
           tree_250_percent  = "prop.landscape_250_tree_canopy",
@@ -99,7 +99,7 @@ met_250_clean <- met_250 %>%
    filter(ID %in% rownames(phylo_tu)) %>%
    column_to_rownames(var = "ID")
 
-met_500_clean <- met_500 %>%
+met_500_clean <- l_met_500 %>%
    select(ID = "X1",
           grass_500_percent = "prop.landscape_500_grass",
           tree_500_percent  = "prop.landscape_500_tree_canopy",
@@ -135,14 +135,14 @@ dist_spa_250 <- dist_spa %>%
           rownames(met_250_clean)) %>% 
    filter(ID %in% rownames(met_250_clean)) %>%
    column_to_rownames(var = "ID") %>%
-   dist()
+   as.matrix()
  
 dist_spa_500 <- dist_spa %>%
    select(ID = X1, 
           rownames(met_500_clean)) %>% 
    filter(ID %in% rownames(met_500_clean)) %>%
    column_to_rownames(var = "ID") %>%
-   dist()
+   as.matrix()
 
 # double checks
 isSymmetric.matrix(dist_spa_250)
@@ -211,53 +211,31 @@ scores_env_500 <- scores(pc_env_500, display = "sites", choice = 1:2)
 # PCoA: spatial distance (250m) ------------------------------------------------
 
 # conduct principal coordinate analysis
-pc_spa_250 <- cmdscale(d = dist_spa_250, eig = TRUE, k = 2)
-
-# how many negative eigenvalues
-length(which(pc_spa_250$eig < 0))
-
-# how many PCoA axes?
-ncol(pc_spa_250$points)
+pc_spa_250 <- pcoa(sqrt(dist_spa_250))
 
 # plot 
-pc_spa_250$points %>%
+pc_spa_250$vectors %>%
    as.data.frame() %>%
-   select(Axis_1 = V1, 
-          Axis_2 = V2) %>%
-   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   ggplot(aes(x = Axis.1, y = Axis.2)) + 
    geom_point()
 
 # get scores for both axes
-scores_spa_250 <- pc_spa_250$points 
-
-# PCoA: spatial distance (500m) ------------------------------------------------
+scores_spa_250 <- pc_spa_250$vectors[, 1:2]
 
 # PCoA: spatial distance (500m) ------------------------------------------------
 
 # conduct principal coordinate analysis
-pc_spa_500 <- cmdscale(d = dist_spa_500, eig = TRUE, k = 3)
-
-# how many negative eigenvalues
-length(which(pc_spa_500$eig < 0))
-
-# determine value of negative eigenvalue
-# 4.981991e-08 (approx zero)
-pc_spa_500$eig[which(pc_spa_500$eig < 0)]
-
-# how many PCoA axes?
-ncol(pc_spa_500$points)
+pc_spa_500 <- pcoa(sqrt(dist_spa_500))
 
 # plot 
-pc_spa_500$points %>%
+pc_spa_500$vectors %>%
    as.data.frame() %>%
-   select(Axis_1 = V1, 
-          Axis_2 = V2) %>%
-   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   ggplot(aes(x = Axis.1, y = Axis.2)) + 
    geom_point() + 
    theme_minimal()
 
 # get scores for both axes
-scores_spa_500 <- pc_spa_500$points 
+scores_spa_500 <- pc_spa_500$vectors[, 1:2]
 
 # PCoA: phylo nestedness (250m) --------------------------------------------
 
@@ -268,25 +246,20 @@ phylo_ne_250 <- phylo_ne %>%
    rownames_to_column(var = "ID") %>%
    filter(ID %in% rownames(met_250_clean)) %>%
    column_to_rownames(var = "ID") %>%
-   dist()
+   as.matrix()
 
 # pcoa on nestedness
-pc_phy_ne_250 <- cmdscale(phylo_ne_250, eig = TRUE, k = 2)
+pc_phy_ne_250 <- pcoa(phylo_ne_250, correction = "lingoes")
 
-# how many negative eigenvalues?
-# just two and approx to zero
-length(which(pc_phy_ne_250$eig <= 0))
-
-pc_phy_ne_250$points %>%
+# plot
+pc_phy_ne_250$vectors.cor %>%
    as.data.frame() %>%
-   select(Axis_1 = V1, 
-          Axis_2 = V2) %>%
-   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   ggplot(aes(x = Axis.1, y = Axis.2)) + 
    geom_point() + 
    theme_minimal()
 
 # get scores of all axes
-scores_phy_ne_250 <- pc_phy_ne_250$points
+scores_phy_ne_250 <- pc_phy_ne_250$vectors.cor[, 1:2]
 
 # PCoA: phylo nestedness (500m) --------------------------------------------
 
@@ -297,25 +270,19 @@ phylo_ne_500 <- phylo_ne %>%
    rownames_to_column(var = "ID") %>%
    filter(ID %in% rownames(met_500_clean)) %>%
    column_to_rownames(var = "ID") %>%
-   dist()
+   as.matrix()
 
 # pcoa on nestedness
-pc_phy_ne_500 <- cmdscale(phylo_ne_500, eig = TRUE, k = 2)
+pc_phy_ne_500 <- pcoa(phylo_ne_500, correction = "lingoes")
 
-# how many negative eigenvalues?
-# just two and approx to zero
-length(which(pc_phy_ne_500$eig <= 0))
-
-pc_phy_ne_500$points %>%
+pc_phy_ne_500$vectors.cor %>%
    as.data.frame() %>%
-   select(Axis_1 = V1, 
-          Axis_2 = V2) %>%
-   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   ggplot(aes(x = Axis.1, y = Axis.2)) + 
    geom_point() + 
    theme_minimal()
 
 # get scores of all axes
-scores_phy_ne_500 <- pc_phy_ne_500$points
+scores_phy_ne_500 <- pc_phy_ne_500$vectors[, 1:2]
 
 # PCoA: phylo turnover (250m) --------------------------------------------
 
@@ -325,25 +292,20 @@ phylo_tu_250 <- phylo_tu %>%
    rownames_to_column(var = "ID") %>%
    filter(ID %in% rownames(met_250_clean)) %>%
    column_to_rownames(var = "ID") %>%
-   dist()
+   as.matrix()
 
 # pcoa on nestedness
-pc_phy_tu_250 <- cmdscale(phylo_tu_250, eig = TRUE, k = 2)
+pc_phy_tu_250 <- pcoa(phylo_tu_250, correction = "lingoes")
 
-# how many negative eigenvalues?
-# just two and approx to zero
-length(which(pc_phy_tu_250$eig <= 0))
-
-pc_phy_tu_250$points %>%
+# plot
+pc_phy_tu_250$vectors.cor %>%
    as.data.frame() %>%
-   select(Axis_1 = V1, 
-          Axis_2 = V2) %>%
-   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   ggplot(aes(x = Axis.1, y = Axis.2)) + 
    geom_point() + 
    theme_minimal()
 
 # get scores of all axes
-scores_phy_tu_250 <- pc_phy_tu_250$points
+scores_phy_tu_250 <- pc_phy_tu_250$vectors.cor[, 1:2]
 
 # PCoA: phylo turnover (500m) --------------------------------------------
 
@@ -353,25 +315,20 @@ phylo_tu_500 <- phylo_tu %>%
    rownames_to_column(var = "ID") %>%
    filter(ID %in% rownames(met_500_clean)) %>%
    column_to_rownames(var = "ID") %>%
-   dist()
+   as.matrix()
 
 # pcoa 
-pc_phy_tu_500 <- cmdscale(phylo_tu_500, eig = TRUE, k = 2)
+pc_phy_tu_500 <- pcoa(phylo_tu_500, correction = "lingoes")
 
-# how many negative eigenvalues?
-# just two and approx to zero
-length(which(pc_phy_tu_500$eig <= 0))
-
-pc_phy_tu_500$points %>%
+# plot
+pc_phy_tu_500$vectors.cor %>%
    as.data.frame() %>%
-   select(Axis_1 = V1, 
-          Axis_2 = V2) %>%
-   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   ggplot(aes(x = Axis.1, y = Axis.2)) + 
    geom_point() + 
    theme_minimal()
 
 # get scores of all axes
-scores_phy_tu_500 <- pc_phy_tu_500$points
+scores_phy_tu_500 <- pc_phy_tu_500$vectors.cor[, 1:2]
 
 # PCoA: phylo total (250m) --------------------------------------------
 
@@ -381,25 +338,20 @@ phylo_tot_250 <- phylo_tot %>%
    rownames_to_column(var = "ID") %>%
    filter(ID %in% rownames(met_250_clean)) %>%
    column_to_rownames(var = "ID") %>%
-   dist()
+   as.matrix()
 
 # pcoa on nestedness
-pc_phy_tot_250 <- cmdscale(phylo_tot_250, eig = TRUE, k = 2)
+pc_phy_tot_250 <- pcoa(phylo_tot_250, correction = "lingoes")
 
-# how many negative eigenvalues?
-# just two and approx to zero
-length(which(pc_phy_tot_250$eig <= 0))
-
-pc_phy_tot_250$points %>%
+# plot
+pc_phy_tot_250$vectors %>%
    as.data.frame() %>%
-   select(Axis_1 = V1, 
-          Axis_2 = V2) %>%
-   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   ggplot(aes(x = Axis.1, y = Axis.2)) + 
    geom_point() + 
    theme_minimal()
 
 # get scores of all axes
-scores_phy_tot_250 <- pc_phy_tot_250$points
+scores_phy_tot_250 <- pc_phy_tot_250$vectors.cor[, 1:2]
 
 # PCoA: phylo total (500m) --------------------------------------------
 
@@ -409,30 +361,25 @@ phylo_tot_500 <- phylo_tot %>%
    rownames_to_column(var = "ID") %>%
    filter(ID %in% rownames(met_500_clean)) %>%
    column_to_rownames(var = "ID") %>%
-   dist()
+   as.matrix()
 
 # pcoa 
-pc_phy_tot_500 <- cmdscale(phylo_tot_500, eig = TRUE, k = 2)
+pc_phy_tot_500 <- pcoa(phylo_tot_500, correction = "lingoes")
 
-# how many negative eigenvalues?
-# just two and approx to zero
-length(which(pc_phy_tot_500$eig <= 0))
-
-pc_phy_tot_500$points %>%
+# plot
+pc_phy_tot_500$vectors.cor %>%
    as.data.frame() %>%
-   select(Axis_1 = V1, 
-          Axis_2 = V2) %>%
-   ggplot(aes(x = Axis_1, y = Axis_2)) + 
+   ggplot(aes(x = Axis.1, y = Axis.2)) + 
    geom_point() + 
    theme_minimal()
 
 # get scores of all axes
-scores_phy_tot_500 <- pc_phy_tot_500$points
+scores_phy_tot_500 <- pc_phy_tot_500$vectors.cor[, 1:2]
 
 # Partial procrustes analysis: nestedness --------------------------------------
 
 # control for space (250m buffer)
-resid_spa_phy_ne_250<- resid(lm(scores_phy_ne_250 ~ scores_spa_250))
+resid_spa_phy_ne_250 <- resid(lm(scores_phy_ne_250 ~ scores_spa_250))
 resid_spa_env_250 <- resid(lm(scores_env_250 ~ scores_spa_250))
 
 # control for space (500m buffer)
@@ -441,7 +388,7 @@ resid_spa_env_500 <- resid(lm(scores_env_500 ~ scores_spa_500))
 
 # run analysis 
 parpro_ne_250 <- protest(X = resid_spa_env_250, Y = resid_spa_phy_ne_250)
-parpro_ne_500 <- protest(resid_spa_env_500, resid_spa_phy_ne_500)
+parpro_ne_500 <- protest(X = resid_spa_env_500, Y = resid_spa_phy_ne_500)
 
 # Partial procustes analysis: turnover -----------------------------------------
 
@@ -470,4 +417,7 @@ resid_spa_env_500 <- resid(lm(scores_env_500 ~ scores_spa_500))
 # run analysis 
 parpro_tot_250 <- protest(resid_spa_env_250, resid_spa_phy_tot_250)
 parpro_tot_500 <- protest(resid_spa_env_500, resid_spa_phy_tot_500)
+
+
+   
 
