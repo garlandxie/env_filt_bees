@@ -8,11 +8,10 @@
 # Institutional affiliation: University of Toronto
 
 # libraries --------------------------------------------------------------------
-library(vegan)
-library(picante)
-library(here)
+library(vegan)   # for calculating partial procrustes analysis
+library(here)    # for creating relative file-paths
+library(picante) # for calculating principal coordinate analysis
 library(tidyverse)
-library(broom)
 
 # import -----------------------------------------------------------------------
 
@@ -158,23 +157,6 @@ pc_env_250 <- prcomp(met_250_clean, scale = TRUE)
 summary(pc_env_250)
 screeplot(pc_env_250)
 
-# plot score loadings
-env_pca_250_tidy <- bind_cols(
-   tag = colnames(met_250_clean), 
-   tidy(pc_env_250$rotation)) %>%
-   gather(PC, Contribution, PC1:PC3)
-
-env_pca_250_tidy %>%
-   filter(PC %in% c("PC1", "PC2", "PC3")) %>%
-   mutate(tag = reorder(tag, Contribution)) %>%
-   ggplot(aes(tag, Contribution)) +
-   geom_col(show.legend = FALSE, alpha = 0.8) + 
-   coord_flip() + 
-   labs(x = "",
-        y = "", 
-        title = "250m buffer") + 
-   facet_wrap(~PC , nrow = 3) 
-
 # get scores for all three axes
 scores_env_250 <- scores(pc_env_250, display = "sites", choice = 1:2)
 
@@ -188,24 +170,7 @@ pc_env_500 <- prcomp(met_500_clean, scale = TRUE)
 summary(pc_env_500)
 screeplot(pc_env_500)
 
-# plot score loadings
-env_pca_500_tidy <- bind_cols(
-   tag = colnames(met_500_clean), 
-   tidy(pc_env_500$rotation)) %>%
-   gather(PC, Contribution, PC1:PC3)
-
-env_pca_500_tidy %>%
-   filter(PC %in% c("PC1", "PC2", "PC3")) %>%
-   mutate(tag = reorder(tag, Contribution)) %>%
-   ggplot(aes(tag, Contribution)) +
-   geom_col(show.legend = FALSE, alpha = 0.8) + 
-   coord_flip() + 
-   labs(x = "",
-        y = "", 
-        title = "500m buffer") + 
-   facet_wrap(~PC , nrow = 3) 
-
-# get scores for all three axes
+# get scores for both axes
 scores_env_500 <- scores(pc_env_500, display = "sites", choice = 1:2)
 
 # PCoA: spatial distance (250m) ------------------------------------------------
