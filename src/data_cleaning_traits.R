@@ -3,7 +3,6 @@ library(here)
 library(dplyr)
 library(janitor)
 library(stringr)
-library(validate)
 library(forcats)
 library(readr)
 library(stringr)
@@ -17,25 +16,6 @@ trait <- read_csv(here("data/original", "bee_trait_matrix.csv"))
 str(trait)
 head(trait, n = 5)
 tail(trait, n = 5)
-
-# data validation
-val <- trait %>%
-  clean_names() %>%
-  as.data.frame() %>%
-  check_that(
-    native_y_n %in% c("Y", "N"),
-    emer_time_a > 0,
-    !is.na(leaf_hair), 
-    !is.na(leaf_cut), 
-    !is.na(leaf_pulp), 
-    !is.na(resin), 
-    !is.na(mud), 
-    !is.na(stone), 
-    !is.na(none), 
-    diet %in% c("Poly", "Oligo"), 
-    volt_a %in% c(1, 2), 
-    itd > 0) %>%
-  summary()
   
 # clean data -------------------------------------------------------------------
 
@@ -60,7 +40,7 @@ trait_tidy <- trait %>%
   
     # change emergence time time levels to 
     # Spring: (Days 0 - 14)
-    # Summer: (Days 14+ )
+    # Summer: (Days 14 +)
     emer_time2 = ifelse(emer_time <= 2, "Spring", "Summer") %>%
                  factor(),
     
@@ -93,9 +73,6 @@ trait_tidy <- trait %>%
 glimpse(trait_tidy)
 
 # Save to disk -----------------------------------------------------------------
-
-# comma-delimited file, for data repos
-write.csv(trait_tidy, file = here("data/final", "trait_matrix.csv"))
 
 # preserve data-types, save as RDS
 saveRDS(trait_tidy, file = here("data/final", "trait_matrix.rds"))
