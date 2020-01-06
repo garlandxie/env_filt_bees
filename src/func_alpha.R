@@ -1,19 +1,22 @@
-#######################################################################################################
-# calculate functional alpha diversity (ses.mfd)
-#######################################################################################################
+# calculate functional alpha diversity (ses.mfd) -------------------------------
+# author(s): Nicholas Sookhan and Garland Xie
+# institutional affiliation: University of Toronto 
 
 # libraries --------------------------------------------------------------------
-library(StatMatch)
-library(picante)
-library(here)
-library(tidyverse)
-library(gghighlight)
+library(StatMatch) # for calculating gower's distance
+library(picante)   # for analyzing community matrices
+library(here)      # for creating relative file-paths
+library(tidyverse) 
 
 # import -----------------------------------------------------------------------
-comm <- read.csv(here("data/original", "community_data_matrix.csv"),
-                 row.names = 1)
 
-trait <- read.csv(here("data/final", "trait_matrix.csv"))
+# relative file-paths
+comm_path <- here("data/original", "community_data_matrix.csv")
+trat_path <- here("data/final", "trait_matrix.csv")
+
+# load data 
+comm <- read.csv(comm_path, row.names = 1)
+trait <- read.csv(trait_path)
 
 # check packaging --------------------------------------------------------------
 
