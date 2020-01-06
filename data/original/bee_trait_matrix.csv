@@ -1,0 +1,32 @@
+﻿Genus,Species,ID,Authority,Native (Y/N),Emer Time ,Nesting Material,Leaf hair,Leaf cut,Leaf pulp,Resin,Mud,Stone,None,# nesting material types,Diet,Volt ,ITD
+Anthidium,manicatum,Anthi_man,Linnaeus,N,3,Leaf hairs,X,,,,,,,1,Poly,1,4.2
+Anthophora,terminalis,Antho_term,Cresson,Y,2,None*,,,,,,,X,0,Poly,1,4.5
+Chelostoma,rapunculi,Chel_rap,(Lepeletier),N,3,"Soils + pebbles (Rozen & Praz, 2016)",,,,,X,X,,2,Oligo,1,1.13
+Chelostoma,campanularum,Chel_camp,(Kirby),N,3,"Soils + pebbles (Rozen & Praz, 2016)",,,,,X,X,,2,Oligo,1,1.11
+Heriades,carinata,Heri_cari,Cresson,Y,3,"Resin (Rozen & Praz, 2016)",,,,X,,,,1,Poly,1,1.26
+Heriades,variolosa,Heri_vari,(Cresson),Y,3,"Resin (Rozen & Praz, 2016)",,,,X,,,,1,Oligo,1,1.3
+Hoplitis,producta,Hop_prod,(Cresson),Y,3,"Leaf pulp + pebbles (Medler, 1961)",,,X,,,X,,2,Poly,1,1.83
+Hoplitis,spoliata,Hop_spol,(Provancher),Y,3,"Leaf pulp + pebbles (Medler, 1961)",,,X,,,X,,2,Poly,1,2.62
+Hoplitis,truncata,Hop_trunc,(Cresson),N,3,"Leaf pulp + pebbles (Medler, 1961)",,,X,,,X,,2,Poly,1,2.4
+Hylaeus,affinis,Hyl_aff,(Smith),Y,2,None,,,,,,,X,0,Poly,2,1.28
+Hylaeus,annulatus,Hyl_ann,(Linnaeus),Y,2,None,,,,,,,X,0,Poly,2,1.23
+Hylaeus,hyalinatus,Hyl_hya,Smith,N,2,None,,,,,,,X,0,Poly,2,1.3
+Hylaeus,leptocephalus,Hyl_lepto,(Morawitz),N,3,None,,,,,,,X,0,Oligo,2,1.3
+Hylaeus,mesillae,Hyl_mesi,(Cockerell),Y,2,None,,,,,,,X,0,Poly,2,1.2
+Hylaeus,modestus,Hyl_mod,Say,Y,3,None,,,,,,,X,0,Poly,2,1.42
+Hylaeus,punctatus,Hyl_punc,Brullé,N,2,None,,,,,,,X,0,Poly,2,1.3
+Hylaeus,verticalis,Hyl_vert,(Cresson),Y,2,None,,,,,,,X,0,Poly,2,1.3
+Megachile,brevis,Mega_brev,Say,Y,3,Cut leaves (Sheffield et al. 2011),,X,,,,,,1,Poly,1,3
+Megachile,campanulae,Mega_camp,(Robertson),Y,3,Resin (Sheffield et al. 2011),,,,X,,,,1,Poly,1,2.1
+Megachile,centuncularis,Mega_cent,(Linnaeus),N,3,Cut leaves (Sheffield et al. 2011),,X,,,,,,1,Poly,2,2.57
+Megachile,frigida,Mega_frig,Smith,Y,3,Cut leaves (Sheffield et al. 2011),,X,,,,,,1,Poly,1,3.49
+Megachile,inermis,Mega_iner,Provancher,Y,3,Cut leaves (Sheffield et al. 2011),,X,,,,,,1,Poly,1,4.3
+Megachile,mendica,Mega_mend,Cresson,Y,3,Cut leaves (Sheffield et al. 2011),,X,,,,,,1,Poly,1,3.4
+Megachile,pugnata,Mega_pug,Say,Y,3,Cut leaves + leaf pulp + Mud,,X,X,,X,,,3,Oligo,1,3.24
+Megachile,relativa,Mega_rel,Cresson,Y,3,"Cut leaves (Medler & Koerber, 1958)",,X,,,,,,1,Poly,1,2.78
+Megachile,rotundata,Mega_rot,(Fabricius),N,3,Cut leaves,,X,,,,,,1,Poly,2,3.13
+Megachile,sculpturalis,Mega_sculp,Smith,N,4,Resin,,,,X,,,,1,Poly,1,4.05
+Osmia,atriventris ,Osm_atri,Cresson,Y,1,Leaf pulp (Cane et al. 2007),,,X,,,,,1,Poly,1,1.49
+Osmia,caerulescens,Osm_caer,(Linnaeus),N,1,Leaf pulp (BWARS),,,X,,,,,1,Poly,2,2.6
+Osmia,lignaria,Osm_lig,Say,Y,1,Mud (Cane et al. 2007),,,,,X,,,1,Poly,1,2.43
+Osmia ,pumila,Osm_pum,Cresson,Y,1,Leaf pulp (Cane et al. 2007),,,X,,,,,1,Poly,1,1.62
