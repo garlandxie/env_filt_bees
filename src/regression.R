@@ -2,11 +2,12 @@
 library(here)
 library(dplyr)
 library(readr)
-library(validate)
 library(sp)
 library(tibble)
 library(spdep)
 library(ggplot2)
+library(purrr)
+library(car)
 
 # import -----------------------------------------------------------------------
 
@@ -14,7 +15,6 @@ library(ggplot2)
 site_path <- here("data/original", "site_info_coords.csv")
 mpd_path  <- here("data/working", "ses_mpd.csv") 
 mfd_path  <- here("data/working", "ses_mfd.csv")
-rich_path <- here("data/working", "ses_richness.csv")
 met_250_path <- here("data/original", "land_use_metrics_250.csv")
 met_500_path <- here("data/original", "land_use_metrics_500.csv")
 
@@ -22,7 +22,6 @@ met_500_path <- here("data/original", "land_use_metrics_500.csv")
 site <- read_csv(site_path)
 ses_mpd <- read_csv(mpd_path)
 ses_mfd <- read_csv(mfd_path)
-ses_richness <- read_csv(rich_path)
 l_met_250 <- read_csv(met_250_path)
 l_met_500 <- read_csv(met_500_path)
 
@@ -43,11 +42,6 @@ str(ses_mfd)
 head(ses_mfd, n = 5)
 tail(ses_mfd, n = 5)
 
-# ses richness
-str(ses_richness)
-head(ses_richness, n = 5)
-tail(ses_richness, n = 5)
-
 # met 250
 str(l_met_250)
 head(l_met_250, n = 5)
@@ -60,13 +54,13 @@ tail(l_met_500, n = 5)
 
 # data cleaning ----------------------------------------------------------------
 
-df <- site %>%
+full_df <- site %>%
   full_join(l_met_250, by = "X1") %>%
   full_join(l_met_500, by = "X1") %>%
   full_join(ses_mpd, by = "X1") %>%
   full_join(ses_mfd, by = "X1") %>%
-  full_join(ses_richness, by = "X1") %>%
   select(ID = "X1",
+         num_sp = "ntaxa.y",
          mtm3deg_nor,
          mtm3deg_eas,
          grass_250_percent = "prop.landscape_250_grass",
@@ -76,43 +70,29 @@ df <- site %>%
          tree_500_percent   = "prop.landscape_500_tree_canopy",
          urban_500_percent  = "prop.landscape_500_urban",
          ses_mfd = "mfd.obs.z",
-         ses_mpd = "mpd.obs.z",
-         ses_R = "sr.obs.z")
+         ses_mpd = "mpd.obs.z")
 
 # linear models: model fitting -------------------------------------------------
 
-# ses richness
-lm_250_sr <- df %>%
-  filter(!is.na(urban_250_percent)) %>%
-  lm(ses_R ~ urban_250_percent, data = .) 
-
-lm_500_sr <- df %>%
-  filter(!is.na(urban_500_percent)) %>%
-  lm(ses_R ~ urban_500_percent, data = .)
-
 # ses mpd
-lm_250_mpd <- df %>%
+lm_250_mpd <- full_df %>%
   filter(!is.na(urban_250_percent)) %>%
   lm(ses_mpd ~ urban_250_percent, data = .)
 
-lm_500_mpd <- df %>%
+lm_500_mpd <- full_df %>%
   filter(!is.na(urban_500_percent)) %>%
   lm(ses_mpd ~ urban_500_percent, data = .)
 
 # ses mfd
-lm_250_mfd <- df %>%
+lm_250_mfd <- full_df %>%
   filter(!is.na(urban_250_percent)) %>%
   lm(ses_mfd ~ urban_250_percent, data = .)
 
-lm_500_mfd <- df %>%
+lm_500_mfd <- full_sdf %>%
   filter(!is.na(urban_500_percent)) %>%
   lm(ses_mfd ~ urban_500_percent, data = .)
 
 # linear models: model summary -------------------------------------------------
-
-# sr
-summary(lm_250_sr) 
-summary(lm_500_sr) 
 
 # mpd
 summary(lm_250_mpd) 
@@ -123,13 +103,6 @@ summary(lm_250_mfd)
 summary(lm_500_mfd)
 
 # linear models: model adequacy ------------------------------------------------
-
-# sr
-plot(lm_250_sr) 
-plot(lm_500_sr)
-
-hist(resid(lm_250_sr))
-hist(resid(lm_500_sr))
 
 # mpd
 plot(lm_250_mpd) 
@@ -185,10 +158,6 @@ lm_morantest_500 <- partial(
   listw = nb2listw(knn2nb(knearneigh(coords_500, 8)),style = "W"),
 )
 
-# sr
-lm_morantest_250(lm_250_sr)
-lm_morantest_500(model = lm_500_sr)
-
 # mpd
 lm_morantest_250(model = lm_250_mpd)
 lm_morantest_500(model = lm_500_mpd)
@@ -199,44 +168,31 @@ lm_morantest_500(lm_500_mfd)
 
 # plots ------------------------------------------------------------------------
 
-plot_lm_R_250 <- df %>%
-  filter(!is.na(urban_250_percent) & !is.na(ses_R)) %>%
-  ggplot(aes(x = urban_250_percent, y = ses_R)) + 
-  geom_jitter() + 
-  labs(y = "ses.Richness", 
-       x = "% Impervious Cover (250m scale)") + 
-  theme_minimal()
-
-plot_lm_R_500 <- df %>%
-  filter(!is.na(urban_500_percent) & !is.na(ses_R)) %>%
-  ggplot(aes(x = urban_500_percent, y = ses_R)) + 
-  geom_jitter() + 
-  labs(y = "ses.Richness", 
-       x = "% Impervious Cover (500m scale)") + 
-  theme_minimal()
-
-plot_lm_mpd_250 <- df %>%
+(plot_lm_mpd_250 <- df %>%
   filter(!is.na(urban_250_percent) & !is.na(ses_mpd)) %>%
   ggplot(aes(x = urban_250_percent, y = ses_mpd)) + 
   geom_smooth(method = "lm") + 
   geom_jitter() + 
+  geom_hline(yintercept = 0, linetype = "dashed") + 
   labs(y = "ses.MPD", 
        x = "% Impervious Cover (250m scale)") + 
-  theme_minimal()
+  theme_minimal())
 
-plot_lm_mpd_500 <- df %>%
+(plot_lm_mpd_500 <- df %>%
   filter(!is.na(urban_500_percent) & !is.na(ses_mpd)) %>%
   ggplot(aes(x = urban_500_percent, y = ses_mpd)) + 
   geom_smooth(method = "lm") + 
   geom_jitter() + 
+  geom_hline(yintercept = 0, linetype = "dashed") + 
   labs(y = "ses.MPD", 
        x = "% Impervious Cover (500m scale)") + 
-  theme_minimal()
+  theme_minimal())
 
 plot_lm_mfd_250 <- df %>%
   filter(!is.na(urban_250_percent) & !is.na(ses_mfd)) %>%
   ggplot(aes(x = urban_250_percent, y = ses_mfd)) + 
   geom_jitter() + 
+  geom_hline(yintercept = 0, linetype = "dashed") + 
   labs(y = "ses.MFD", 
        x = "% Impervious Cover (250m scale)") + 
   theme_minimal()
@@ -244,8 +200,25 @@ plot_lm_mfd_250 <- df %>%
 plot_lm_mfd_500 <- df %>%
   filter(!is.na(urban_500_percent) & !is.na(ses_mfd)) %>%
   ggplot(aes(x = urban_500_percent, y = ses_mfd)) + 
-  geom_smooth(method = "lm") + 
   geom_jitter() + 
   labs(y = "ses.MFD", 
        x = "% Impervious Cover (500m scale)") + 
   theme_minimal()
+
+# Save the data! ---------------------------------------------------------------
+
+# ses MPD vs % urban (250m scale)
+ggsave(filename = here("output/figures", "fig2-crit2-ses_MPD.png"),
+       plot = plot_lm_mpd_250,
+       units = "in", 
+       width = 5,
+       height = 4, 
+       device = "png")
+
+# ses MFD vs % urban (250m scale)
+ggsave(filename = here("output/figures", "fig2-crit2-ses_MFD.png"),
+       plot = plot_lm_mfd_250,
+       units = "in", 
+       width = 5,
+       height = 4, 
+       device = "png")
