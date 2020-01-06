@@ -15,7 +15,7 @@ library(tidyverse)
 
 # relative file-paths 
 comm_path <- here("data/original", "community_data_matrix.csv")
-met_250_path <- here(here("data/original", "land_use_metrics_250.csv"))
+met_250_path <- here("data/original", "land_use_metrics_250.csv")
 met_500_path <- here("data/original", "land_use_metrics_500.csv")
 trait_path <- here("data/final", "trait_matrix.rds")
 
