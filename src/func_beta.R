@@ -11,10 +11,14 @@ library(cluster)   # for calculating gower's distance
 library(ape)       # for running principal coordinate analysis
 
 # import -----------------------------------------------------------------------
-comm <- read.csv(here("data/original", "community_data_matrix.csv"),
-                      row.names = 1)
 
-trait <- readRDS(here("data/final", "trait_matrix.rds"))
+# relative file-paths
+comm_path <- here("data/original", "community_data_matrix.csv")
+trait_path <- here("data/final", "trait_matrix.rds")
+
+# load data
+comm <- read.csv(comm_path, row.names = 1)
+trait <- readRDS(trait_path)
 
 # check packaging --------------------------------------------------------------
 
@@ -61,6 +65,10 @@ comm_rel <- decostand(comm, method = "pa") %>%
 # take the first two PCoa axis
 pcoa_axis2 <- trait_pcoa$vectors.cor[, 1:2]
 
+# partition beta diversity into a list of 
+# 1) total beta-diversity dissimilarity matrix
+# 2) nestedness dissimilarity matrix
+# 3) turnover dissimilarity matrix
 func_beta <- functional.beta.pair(x = comm_rel, 
                                   traits = pcoa_axis2, 
                                   index.family = "sorensen")
