@@ -1,13 +1,15 @@
+# calculating regression models ------------------------------------------------
+# author(s): Nicholas Sookhan, Garland Xie
+
 # libraries --------------------------------------------------------------------
-library(here)
-library(dplyr)
-library(readr)
-library(sp)
-library(tibble)
-library(spdep)
-library(ggplot2)
-library(purrr)
-library(car)
+library(here)    # for creating relative file-paths
+library(dplyr)   # for manipulating data
+library(readr)   # for reading csv files
+library(sp)      # for analysing geospatial data
+library(tibble)  # for converting row names to columns (+ vice versa)
+library(spdep)   # for running spatial autocorrelation tests
+library(ggplot2) # for visualising data
+library(purrr)   # for creating iterations
 
 # import -----------------------------------------------------------------------
 
@@ -102,22 +104,6 @@ summary(lm_500_mpd)
 summary(lm_250_mfd) 
 summary(lm_500_mfd)
 
-# linear models: model adequacy ------------------------------------------------
-
-# mpd
-plot(lm_250_mpd) 
-plot(lm_500_mpd)
-
-hist(resid(lm_250_mpd))
-hist(resid(lm_500_mpd))
-
-# mfd
-plot(lm_250_mfd) 
-plot(lm_500_mfd)
-
-hist(resid(lm_250_mfd))
-hist(resid(lm_500_mfd))
-
 # linear models: spatial autocorrelation ---------------------------------------
 
 # 250 m spatial scale
@@ -159,12 +145,28 @@ lm_morantest_500 <- partial(
 )
 
 # mpd
-lm_morantest_250(model = lm_250_mpd)
-lm_morantest_500(model = lm_500_mpd)
+lm_morantest_250(lm_250_mpd)
+lm_morantest_500(lm_500_mpd)
 
 # mfd
 lm_morantest_250(lm_250_mfd)
 lm_morantest_500(lm_500_mfd)
+
+# linear models: model adequacy ------------------------------------------------
+
+# mpd
+plot(lm_250_mpd) 
+plot(lm_500_mpd)
+
+hist(resid(lm_250_mpd))
+hist(resid(lm_500_mpd))
+
+# mfd
+plot(lm_250_mfd) 
+plot(lm_500_mfd)
+
+hist(resid(lm_250_mfd))
+hist(resid(lm_500_mfd))
 
 # plots ------------------------------------------------------------------------
 
