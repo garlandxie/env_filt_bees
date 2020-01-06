@@ -12,11 +12,11 @@ library(tidyverse)
 
 # relative file-paths
 comm_path <- here("data/original", "community_data_matrix.csv")
-trat_path <- here("data/final", "trait_matrix.csv")
+trait_path <- here("data/final", "trait_matrix.rds")
 
 # load data 
 comm <- read.csv(comm_path, row.names = 1)
-trait <- read.csv(trait_path)
+trait <- readRDS(trait_path)
 
 # check packaging --------------------------------------------------------------
 
@@ -35,9 +35,8 @@ tail(trait,  n = 5)
 # to relative abundance
 comm_rel <- decostand(comm, method = "total")
 
-# assign appropriate data types to each trait
+# assign species as row names
 trait_tidy <- trait %>%
-  select(-"X") %>%
   column_to_rownames(var = "spp") 
 
 # calculate gower distance matrix
@@ -55,16 +54,12 @@ isSymmetric.matrix(trait_dist)
 
 # calculate ses.mfd ------------------------------------------------------------
 
-# lots of null models!
+# use a taxa swap model 
 ses_MFD_tx <- ses.mpd(samp = comm_tidy2, 
                       dis  = trait_dist, 
                       runs = 999, 
                       abundance.weighted = TRUE,
                       null.model = "taxa.labels")
-
-# histograms -------------------------------------------------------------------
-
-hist(ses_MFD_tx$mpd.obs.p)
 
 # linear models ----------------------------------------------------------------
 
