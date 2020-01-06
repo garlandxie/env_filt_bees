@@ -1,16 +1,14 @@
-#######################################################################################################
-# calculate functional beta diversity (Dpw)
-#######################################################################################################
+# calculate functional beta diversity ------------------------------------------
+# authors(s): Nicholas Sookhan, Garland Xie
 
 # libraries --------------------------------------------------------------------
-library(here)
-library(vegan)
-library(betapart)
-library(dplyr)
-library(tibble)
-library(tidylog)
-library(cluster)
-library(ape)
+library(here)      # for creating relative file-paths
+library(vegan)     # for analysing community matrices
+library(betapart)  # for calculating turnover, total + nestedness matrices
+library(dplyr)     # for manipulating data
+library(tibble)    # for converting rownames to columns (+ vice verse)
+library(cluster)   # for calculating gower's distance
+library(ape)       # for running principal coordinate analysis
 
 # import -----------------------------------------------------------------------
 comm <- read.csv(here("data/original", "community_data_matrix.csv"),
@@ -70,7 +68,3 @@ func_beta <- functional.beta.pair(x = comm_rel,
 # Save to disk -----------------------------------------------------------------
 
 saveRDS(func_beta, here("data/working", "func_beta_matrices.rds"))
-
-
-
-
