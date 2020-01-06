@@ -46,10 +46,9 @@ trait_pcoa <- pcoa(trait_dist, correction = "cailliez")
 
 # data cleaning: community data matrix -----------------------------------------
 
-# to relative abundance
+# convert community matrix into presence-absence data
+# this is required for the functional.betapair R function
 comm_rel <- decostand(comm, method = "pa") %>%
-  
-  # 
   rownames_to_column(var = "site") %>%
   
   # remove kleptoparasites
