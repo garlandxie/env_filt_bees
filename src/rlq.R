@@ -1,6 +1,8 @@
-# RLQ Analysis - Xie et al. 2018 
-# Script is used to clean data for multiple databases before conducting an RLQ analysis
+# RLQ analysis -----------------------------------------------------------------
+# Script is used to conduct an RLQ analysis ------------------------------------
 # Code developed by Garland Xie
+# Institutional affiliation: University of Toronto
+# Contact info: garland.xie@mail.utoronto.ca
 
 # Load libraries ---------------------------------------------------------------
 library(ade4)
@@ -11,22 +13,22 @@ library(tidyverse)
 
 # Import files -----------------------------------------------------------------
 
-# community data matrix 
-comm <- read_csv(here("data/original", "community_data_matrix.csv"))
+# relative file-paths 
+comm_path <- here("data/original", "community_data_matrix.csv")
+met_250_path <- here(here("data/original", "land_use_metrics_250.csv"))
+met_500_path <- here("data/original", "land_use_metrics_500.csv")
+trait_path <- here("data/final", "trait_matrix.rds")
 
-# land-use metrics for each site (250m spatial scale)
-met_250 <- read_csv(here("data/original", "land_use_metrics_250.csv"))
+# load data
+comm <- read_csv(comm_path)
+met_250 <- read_csv(met_250_path)
+met_500 <- read_csv(met_500_path)
+trait <- readRDS(trait_path)
 
-# land-use metrics for each site (500m spatial scale)
-met_500 <- read_csv(here("data/original", "land_use_metrics_500.csv"))
-
-# trait matrix of 31 species (excluded kleptoparasites)
-trait <- read.csv(here("data/final", "trait_matrix.csv"))
-
-# Clean: comm matrix -------------------------------------------------
+# Clean: community matrix ------------------------------------------------------
 
 # Change taxon names to abbreviated versions 
-# plotting purposes
+# for plotting purposes
 taxon_change <- function (spList) {
   
   f <- spList %>%
@@ -54,17 +56,16 @@ comm_tidy <- comm %>%
          Anth_man = Ant_man) %>%
   
   # remove kleptoparasites
-  select(-c("Ste_ver", "Coe_say", "Coe_alt", "Coe_moe"))
-
+  select(-c("Ste_ver", "Coe_say", "Coe_alt", "Coe_moe")) 
+  
 # Clean: trait matrix ------------------------------------------------
 
 trait_clean <- trait %>%
-  select(-"X") %>%
   mutate(ID = spp %>% 
            as.character() %>%
            taxon_change() %>%
-           str_replace("Ant_man", "Anth_man"),
-         volt = factor(volt)) %>%
+           str_replace("Ant_man", "Anth_man")
+         ) %>%
   
   rename(LH = leaf_hair, 
          LC = leaf_cut, 
@@ -84,6 +85,10 @@ met_250_clean <- met_250 %>%
 met_500_clean <- met_500 %>%
   rename(ID = X1) %>%
   arrange(ID)
+
+# double check
+str(met_250_clean)
+str(met_500_clean)
 
 # RLQ: 250 ---------------------------------------------------------------------
 
@@ -405,8 +410,8 @@ R_500_load <- RLQ_500$l1 %>%
        y = "Relative importance in principle component (weighted by species abundance") + 
   coord_flip() 
 
-traits_N <- c("stone.N","none.N","resin.N", "mud.N", 
-              "LH.N", "LP.N", "LC.N")
+traits_N <- c("stone.0","none.0","resin.0", "mud.0", 
+              "LH.0", "LP.0", "LC.0")
  
 RLQ_250_load <- RLQ_250$c1 %>%
   rownames_to_column(var = "traits")%>%
@@ -420,15 +425,15 @@ RLQ_250_load <- RLQ_250$c1 %>%
            traits == "diet.Oligo" ~ "Diet Breadth (Oligolectic)",
            traits == "volt.1" ~ "Univoltinism",
            traits == "volt.2" ~ "Multivolinism",
-           traits == "stone.Y" ~ "Nesting Material (Stone)",
-           traits == "none.Y" ~ "Nesting Material (None)",
-           traits == "mud.Y" ~ "Nesting Material (Mud)",
-           traits == "LH.Y" ~ "Nesting Material (Leaf Hair)",
-           traits == "LC.Y" ~ "Nesting Material (Leaf Cut)",
-           traits == "LP.Y" ~ "Nesting Material (Leaf Pulp)",
-           traits == "resin.Y" ~ "Nesting Material (Resin)",
-           traits == "nativ.Y"  ~ "Native Status",
-           traits == "nativ.N" ~ "Exotic Status",
+           traits == "stone.1" ~ "Nesting Material (Stone)",
+           traits == "none.1" ~ "Nesting Material (None)",
+           traits == "mud.1" ~ "Nesting Material (Mud)",
+           traits == "LH.1" ~ "Nesting Material (Leaf Hair)",
+           traits == "LC.1" ~ "Nesting Material (Leaf Cut)",
+           traits == "LP.1" ~ "Nesting Material (Leaf Pulp)",
+           traits == "resin.1" ~ "Nesting Material (Resin)",
+           traits == "nativ.1"  ~ "Native Status",
+           traits == "nativ.0" ~ "Exotic Status",
            traits == "itd" ~ "Intertegular Distance",
            TRUE ~ traits),
            traits = reorder(traits, CS1)) %>%
@@ -451,15 +456,15 @@ RLQ_500_load <- RLQ_500$c1 %>%
            traits == "diet.Oligo" ~ "Diet Breadth (Oligolectic)",
            traits == "volt.1" ~ "Univoltinism",
            traits == "volt.2" ~ "Multivolinism",
-           traits == "stone.Y" ~ "Nesting Material (Stone)",
-           traits == "none.Y" ~ "Nesting Material (None)",
-           traits == "mud.Y" ~ "Nesting Material (Mud)",
-           traits == "LH.Y" ~ "Nesting Material (Leaf Hair)",
-           traits == "LC.Y" ~ "Nesting Material (Leaf Cut)",
-           traits == "LP.Y" ~ "Nesting Material (Leaf Pulp)",
-           traits == "resin.Y" ~ "Nesting Material (Resin)",
-           traits == "nativ.Y"  ~ "Native Status",
-           traits == "nativ.N" ~ "Exotic Status",
+           traits == "stone.1" ~ "Nesting Material (Stone)",
+           traits == "none.1" ~ "Nesting Material (None)",
+           traits == "mud.1" ~ "Nesting Material (Mud)",
+           traits == "LH.1" ~ "Nesting Material (Leaf Hair)",
+           traits == "LC.1" ~ "Nesting Material (Leaf Cut)",
+           traits == "LP.1" ~ "Nesting Material (Leaf Pulp)",
+           traits == "resin.1" ~ "Nesting Material (Resin)",
+           traits == "nativ.1"  ~ "Native Status",
+           traits == "nativ.0" ~ "Exotic Status",
            traits == "itd" ~ "Intertegular Distance",
            TRUE ~ traits),
          traits = reorder(traits, CS1)) %>%
