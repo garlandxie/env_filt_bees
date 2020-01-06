@@ -1,14 +1,13 @@
-#######################################################################################################
-# calculate phylogenetic beta diversity (Dpw)
-#######################################################################################################
+# calculate phylogenetic beta diversity ----------------------------------------
+# author(s): Garland Xie, Nicholas Sookhan
 
 # libraries --------------------------------------------------------------------
-library(ape)
-library(picante)
-library(vegan)
-library(here)
-library(dplyr)
-library(betapart)
+library(ape)      # for reading phylogenetic trees
+library(picante)  # for manipulating phylogenetic trees
+library(vegan)    # for analysing community matrices
+library(here)     # for creating relative file-paths
+library(dplyr)    # for manipulating data
+library(betapart) # for calculating turnover, total + nestedness matrices
 
 # import -----------------------------------------------------------------------
 comm <- read.csv(here("data/original", "community_data_matrix.csv"), 
