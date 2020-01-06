@@ -1,10 +1,11 @@
+# calculating spatial distances ------------------------------------------------
+# author(s): Nicholas Sookhan, Garland Xie
+
 # libraries --------------------------------------------------------------------
-library(sp)
-library(here)
-library(validate)
-library(dplyr)
-library(reshape2)
-library(ggplot2)
+library(sp)        # for analysing geospatial data 
+library(here)      # for creating relative file-paths 
+library(dplyr)     # for manipulating data 
+library(ggplot2)   # for visualising data 
 
 # load data --------------------------------------------------------------------
 
@@ -22,20 +23,6 @@ site <- read.csv(site_path,
 str(site)
 head(site, n = 5)
 tail(site, n = 5)
-
-# validate data
-# note: all sites are in the GTA = narrow coordinate range
-site %>%
-  check_that(
-    is.character(site),
-    is.character(name),
-    wgs84_lat >= 43, 
-    wgs84_long <= -79,
-    nad27_lat >= 43,
-    nad27_long <= -79,
-    mtm3deg_nor > 0,
-    mtm3deg_eas > 0) %>%
-  summary()
 
 # visualize coordinates --------------------------------------------------------
 
